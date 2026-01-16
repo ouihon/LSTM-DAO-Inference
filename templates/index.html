@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Component Design</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Sidebar width transition animation */
+        .sidebar-transition {
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Active menu item styling: dark background with white text */
+        .menu-item.active {
+            background-color: rgb(35, 35, 35) !important;
+            color: white !important;
+        }
+        .menu-item.active svg { color: white !important; }
+        
+        /* Menu item hover and transition effects */
+        .menu-item { transition: all 0.3s ease; cursor: pointer; }
+
+        /* Text visibility classes for sidebar collapse/expand */
+        .hide-text { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .show-text { opacity: 1; transition: opacity 0.3s; }
+
+        /* Loading overlay: shown during page transitions */
+        #loader-overlay {
+            display: none;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Spinner animation for loading indicator */
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid rgb(35, 35, 35);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Content frame transition effects with performance optimization */
+        #content-frame { 
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            contain: layout style paint; /* Performance optimization: isolate layout calculations */
+        }
+        
+        /* Sidebar animation performance optimization */
+        #sidebar {
+            will-change: width;
+            contain: layout style;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="sidebar-transition bg-gray-100 border-r border-gray-200 flex flex-col" style="width: 300px;">
+            <div class="p-6 border-b border-gray-200 relative min-h-[100px] flex items-center">
+                <div id="sidebar-banner" class="flex items-center gap-3 show-text">
+                    <div class="flex-shrink-0 w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center shadow-lg">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold text-gray-800 leading-tight">AI Magnetic Design</h1>
+                        <p class="text-[10px] text-gray-500 mt-0.5">DC-AC Converters</p>
+                    </div>
+                </div>
+                
+                <button id="toggle-sidebar" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-full transition-all z-50">
+                    <svg id="sidebar-icon" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2">
+                <a data-page="design" class="menu-item active flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600">
+                    <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    <span class="menu-text font-semibold whitespace-nowrap">Design Center</span>
+                </a>
+                <a data-page="model-libs" class="menu-item flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-200">
+                    <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="menu-text font-semibold whitespace-nowrap">Model Libraries</span>
+                </a>
+                <a data-page="documents" class="menu-item flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-200">
+                    <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="menu-text font-semibold whitespace-nowrap">Documents</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 relative" id="main-content">
+            <div id="loader-overlay" class="absolute inset-0 z-40 flex items-center justify-center">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="spinner"></div>
+                    <span class="text-sm font-medium text-gray-500">AI Processing...</span>
+                </div>
+            </div>
+            <main class="w-full h-full overflow-hidden bg-white">
+                <iframe id="content-frame" src="" class="w-full h-full"></iframe>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // ========== DOM Element References ==========
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const sidebarBanner = document.getElementById('sidebar-banner');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const menuTexts = document.querySelectorAll('.menu-text');
+        const contentFrame = document.getElementById('content-frame');
+        const loader = document.getElementById('loader-overlay');
+        
+        let isCollapsed = false;
+
+        // ========== LocalStorage Keys for State Persistence ==========
+        const STORAGE_KEY = 'magnetic_app_current_page';
+        const STORAGE_SIDEBAR_KEY = 'magnetic_app_sidebar_collapsed';
+        
+        // Page URL mapping: maps page keys to their routes
+        const urlMap = { 
+            'design': '/design', 
+            'model-libs': '/fine_tune',
+            'documents': '/document' 
+        };
+
+        // ========== State Management Functions ==========
+        
+        /**
+         * Save current page to localStorage for persistence across sessions
+         * @param {string} pageKey - The page identifier to save
+         */
+        function saveCurrentPage(pageKey) {
+            try {
+                localStorage.setItem(STORAGE_KEY, pageKey);
+            } catch(e) {
+                console.warn('Failed to save page to localStorage:', e);
+            }
+        }
+
+        /**
+         * Load last visited page from localStorage
+         * @returns {string} The saved page key or 'design' as default
+         */
+        function loadCurrentPage() {
+            try {
+                const savedPage = localStorage.getItem(STORAGE_KEY);
+                return savedPage || 'design'; // Default to design page
+            } catch(e) {
+                console.warn('Failed to load page from localStorage:', e);
+                return 'design';
+            }
+        }
+
+        /**
+         * Save sidebar collapsed state to localStorage
+         * @param {boolean} collapsed - Whether sidebar is collapsed
+         */
+        function saveSidebarState(collapsed) {
+            try {
+                localStorage.setItem(STORAGE_SIDEBAR_KEY, collapsed ? 'true' : 'false');
+            } catch(e) {
+                console.warn('Failed to save sidebar state:', e);
+            }
+        }
+
+        /**
+         * Load sidebar collapsed state from localStorage
+         * @returns {boolean} Whether sidebar was collapsed
+         */
+        function loadSidebarState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_SIDEBAR_KEY);
+                return saved === 'true';
+            } catch(e) {
+                return false;
+            }
+        }
+
+        /**
+         * Initialize page: load last visited page and restore sidebar state
+         */
+        function initializePage() {
+            const savedPage = loadCurrentPage();
+            const savedUrl = urlMap[savedPage] || urlMap['design'];
+            
+            // Set corresponding menu item as active
+            menuItems.forEach(item => {
+                const pageKey = item.getAttribute('data-page');
+                if (pageKey === savedPage) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Load the saved page
+            contentFrame.src = savedUrl;
+
+            // Restore sidebar state
+            const wasCollapsed = loadSidebarState();
+            if (wasCollapsed) {
+                setTimeout(() => {
+                    toggleBtn.click();
+                }, 100);
+            }
+        }
+
+        // ========== Page Initialization ==========
+        // Initialize page when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
+
+        // ========== Sidebar Toggle with Performance Optimization ==========
+        // Debounce resize operations to prevent performance issues
+        let resizeTimeout;
+        const debounceResize = (callback, delay = 100) => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(callback, delay);
+        };
+
+        // Toggle sidebar collapse/expand with iframe performance protection
+        toggleBtn.addEventListener('click', () => {
+            isCollapsed = !isCollapsed;
+            saveSidebarState(isCollapsed);
+            
+            // 在动画开始前，立即通知 iframe 暂停重绘（优先执行）
+            try {
+                const iframeWindow = contentFrame.contentWindow;
+                if (iframeWindow && iframeWindow.postMessage) {
+                    iframeWindow.postMessage({ type: 'pauseResize', pause: true }, '*');
+                }
+            } catch(e) {}
+            
+            // 使用 requestAnimationFrame 确保消息先发送，再执行动画
+            requestAnimationFrame(() => {
+                // 暂时降低 iframe 的优先级，防止其计算干扰 UI 动画
+                contentFrame.style.pointerEvents = 'none';
+                contentFrame.style.opacity = '0.6';
+                contentFrame.style.willChange = 'opacity'; // 优化动画性能
+
+                if (isCollapsed) {
+                    sidebar.style.width = '80px';
+                    sidebarBanner.classList.replace('show-text', 'hide-text');
+                    menuItems.forEach(item => {
+                        item.style.paddingLeft = '0';
+                        item.style.paddingRight = '0';
+                        item.style.justifyContent = 'center';
+                    });
+                    menuTexts.forEach(t => t.style.display = 'none');
+                    toggleBtn.style.left = '50%';
+                    toggleBtn.style.right = 'auto';
+                    toggleBtn.style.transform = 'translate(-50%, -50%)';
+                } else {
+                    sidebar.style.width = '300px';
+                    menuItems.forEach(item => {
+                        item.style.paddingLeft = '1rem';
+                        item.style.paddingRight = '1rem';
+                        item.style.justifyContent = 'flex-start';
+                    });
+                    setTimeout(() => {
+                        sidebarBanner.classList.replace('hide-text', 'show-text');
+                        menuTexts.forEach(t => t.style.display = 'block');
+                    }, 150);
+                    toggleBtn.style.left = 'auto';
+                    toggleBtn.style.right = '1rem';
+                    toggleBtn.style.transform = 'translate(0, -50%)';
+                }
+
+                // 动画结束后恢复 iframe（延迟到动画完全结束）
+                setTimeout(() => {
+                    contentFrame.style.pointerEvents = 'auto';
+                    contentFrame.style.opacity = '1';
+                    contentFrame.style.willChange = 'auto';
+                    try {
+                        const iframeWindow = contentFrame.contentWindow;
+                        if (iframeWindow && iframeWindow.postMessage) {
+                            iframeWindow.postMessage({ type: 'pauseResize', pause: false }, '*');
+                        }
+                    } catch(e) {}
+                }, 400); // 匹配 CSS transition 时间
+            });
+        });
+
+        // 处理 Ctrl+滚轮缩放时的性能优化
+        let wheelTimeout;
+        let isWheeling = false;
+        window.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                if (!isWheeling) {
+                    isWheeling = true;
+                    // 立即通知 iframe 暂停重绘
+                    try {
+                        const iframeWindow = contentFrame.contentWindow;
+                        if (iframeWindow && iframeWindow.postMessage) {
+                            iframeWindow.postMessage({ type: 'pauseResize', pause: true }, '*');
+                        }
+                    } catch(e) {}
+                    contentFrame.style.pointerEvents = 'none';
+                }
+                clearTimeout(wheelTimeout);
+                wheelTimeout = setTimeout(() => {
+                    isWheeling = false;
+                    contentFrame.style.pointerEvents = 'auto';
+                    // 恢复 iframe 重绘
+                    try {
+                        const iframeWindow = contentFrame.contentWindow;
+                        if (iframeWindow && iframeWindow.postMessage) {
+                            iframeWindow.postMessage({ type: 'pauseResize', pause: false }, '*');
+                        }
+                    } catch(e) {}
+                }, 300);
+            }
+        }, { passive: true });
+
+        // ========== Menu Navigation Logic ==========
+        // Handle menu item clicks for page navigation
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = item.getAttribute('data-page');
+                
+                // Skip if already active
+                if (item.classList.contains('active')) return;
+
+                // Update active menu item
+                menuItems.forEach(mi => mi.classList.remove('active'));
+                item.classList.add('active');
+
+                // Save current page to cache for persistence
+                saveCurrentPage(targetPage);
+
+                // Show loading indicator and fade out current content
+                loader.style.display = 'flex';
+                contentFrame.style.opacity = '0';
+
+                // Delay iframe loading to prioritize sidebar animation
+                setTimeout(() => {
+                    contentFrame.src = urlMap[targetPage];
+                }, 300); 
+            });
+        });
+
+        // Hide loader when iframe content is loaded
+        contentFrame.onload = () => {
+            loader.style.display = 'none';
+            contentFrame.style.opacity = '1';
+        };
+    </script>
+</body>
+</html>

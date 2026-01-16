@@ -1,0 +1,2701 @@
+<!--
+    Design Center Page
+    
+    This page provides an interactive design center for magnetic components.
+    Features include:
+    - Real-time parameter adjustment (R, r, d, N)
+    - Grid-connected DC-AC converter simulation
+    - Multiple visualization charts (voltage, flux, B-H curves, core loss)
+    - AI-powered magnetic property prediction
+    - Synchronized chart zooming and panning
+    
+    Dependencies:
+    - Tailwind CSS for styling
+    - Chart.js for data visualization
+    - Chart.js Zoom plugin for chart interactions
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        .slider-control {
+            margin-bottom: 0.75rem;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        .slider-value {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #2563eb;
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 0.375rem;
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            appearance: none;
+            cursor: pointer;
+            accent-color: #2563eb;
+        }
+        input[type="range"]:hover {
+            accent-color: #3b82f6;
+        }
+        input[type="range"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #bfdbfe;
+        }
+        .compact .slider-control {
+            margin-bottom: 0.25rem;
+        }
+        /* Chart container performance optimization */
+        #voltage-chart, #flux-chart, #loss-chart, #b-chart, #h-chart {
+            contain: layout style paint;
+            will-change: contents;
+        }
+        /* Loading overlay styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .loading-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            min-width: 300px;
+            text-align: center;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+            background-size: 200% 100%;
+            animation: progress 1.5s ease-in-out infinite;
+            width: 100%;
+        }
+        @keyframes progress {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="text-sm font-medium text-slate-700">Predicting...</p>
+            <p class="text-xs text-slate-500 mt-1">Please wait</p>
+            <div class="loading-progress">
+                <div class="loading-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+    <main class="p-4">
+        <!-- Top Section: Operating Conditions and Charts -->
+        <div class="grid grid-cols-12 gap-4 mb-4">
+            <!-- Left Panel: Operating Conditions -->
+            <section class="col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <h2 class="font-semibold text-sm text-slate-700">Operating Conditions</h2>
+                </div>
+
+                <div class="p-4 space-y-4 overflow-y-auto">
+                    <!-- Topology & Power -->
+                    <div class="border-b border-slate-200 pb-4">
+                        <h3 class="text-xs font-semibold text-slate-700 mb-2">Topology & Power</h3>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0" style="width: 40%;">
+                                <label class="text-xs font-medium text-slate-600 block mb-2">DC-AC Topology</label>
+                                <select id="topology-select" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:border-blue-500">
+                                    <option value="Single-Phase-full-bridge">Single-Phase Full Bridge</option>
+                                    <option value="3Phase-full-bridge">3Phase Full Bridge</option>
+                                    <option value="3Phase-T-Type-Three-level">3Phase T-Type Three-Level</option>
+                                </select>
+                                <div id="topology-diagram" class="mt-2 flex items-center justify-center" style="width: 100%; min-height: 120px;">
+                                    <svg viewBox="0 0 200 150" style="width: 100%; max-height: 120px;" preserveAspectRatio="xMidYMid meet">
+                                        <image href="/static/images/spfb.png" x="0" y="0" width="200" height="150" preserveAspectRatio="xMidYMid meet"></image>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">DC Voltage</label>
+                                        <span class="slider-value" id="dcVoltage-value">400V</span>
+                                    </div>
+                                    <input type="range" id="dcVoltage" min="200" max="800" step="10" value="400">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">Frequency</label>
+                                        <span class="slider-value" id="frequency-value">75000Hz</span>
+                                    </div>
+                                    <input type="range" id="frequency" min="50000" max="100000" step="1000" value="75000">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">Filter L</label>
+                                        <span class="slider-value" id="filterInductance-value">1mH</span>
+                                    </div>
+                                    <input type="range" id="filterInductance" min="0" max="1.5" step="0.1" value="1">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">Filter C</label>
+                                        <span class="slider-value" id="filterCapacitance-value">2uF</span>
+                                    </div>
+                                    <input type="range" id="filterCapacitance" min="0" max="20" step="0.1" value="2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid Parameters -->
+                    <div>
+                        <h3 class="text-xs font-semibold text-slate-700 mb-3">Grid Parameters</h3>
+                        
+                        <!-- Preset Buttons -->
+                        <div class="grid grid-cols-3 gap-2 mb-3">
+                            <button id="preset-industrial" class="px-2 py-1.5 text-xs rounded border bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100 font-medium">Industrial</button>
+                            <button id="preset-residential" class="px-2 py-1.5 text-xs rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100 font-medium">Residential</button>
+                            <button id="preset-weak-grid" class="px-2 py-1.5 text-xs rounded border bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 font-medium">Weak Grid</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1 compact">
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <label class="text-xs font-medium text-slate-600">Grid Voltage</label>
+                                    <span class="slider-value" id="gridVoltage-value">220V</span>
+                                </div>
+                                <input type="range" id="gridVoltage" min="110" max="380" step="10" value="220">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <label class="text-xs font-medium text-slate-600">Grid Frequency</label>
+                                    <span class="slider-value" id="gridFrequency-value">50Hz</span>
+                                </div>
+                                <input type="range" id="gridFrequency" min="50" max="60" step="1" value="50">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <label class="text-xs font-medium text-slate-600">Power</label>
+                                    <span class="slider-value" id="power-value">2000W</span>
+                                </div>
+                                <input type="range" id="power" min="0" max="10000" step="100" value="2000">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <label class="text-xs font-medium text-slate-600">Grid Impedance</label>
+                                    <span class="slider-value" id="gridImpedance-value">0.2Ω</span>
+                                </div>
+                                <input type="range" id="gridImpedance" min="0" max="1" step="0.01" value="0.2">
+                            </div>
+                        </div>
+
+                        <!-- Harmonics -->
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 mt-3">
+                            <label class="text-xs font-medium text-slate-600 block mb-2">Harmonics Injection (%)</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">3rd</label>
+                                        <span class="slider-value" id="harmonic3-value">5%</span>
+                                    </div>
+                                    <input type="range" id="harmonic3" min="0" max="20" step="1" value="5">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">5th</label>
+                                        <span class="slider-value" id="harmonic5-value">3%</span>
+                                    </div>
+                                    <input type="range" id="harmonic5" min="0" max="15" step="1" value="3">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">7th</label>
+                                        <span class="slider-value" id="harmonic7-value">1%</span>
+                                    </div>
+                                    <input type="range" id="harmonic7" min="0" max="10" step="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Power Control Parameters -->
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 mt-3">
+                            <label class="text-xs font-medium text-slate-600 block mb-2">Power Control Parameters</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">Kp</label>
+                                        <span class="slider-value" id="kp-value">0.00004</span>
+                                    </div>
+                                    <input type="range" id="kp" min="0" max="0.0001" step="0.00001" value="0.00004">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-label">
+                                        <label class="text-xs font-medium text-slate-600">Ki</label>
+                                        <span class="slider-value" id="ki-value">0.8</span>
+                                    </div>
+                                    <input type="range" id="ki" min="0" max="2" step="0.1" value="0.8">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Charts -->
+            <div class="col-span-8 flex flex-col gap-4">
+                <!-- Grid & Inverter Voltage Chart -->
+                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 300px;">
+                    <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Grid & Inverter Voltage (V)</h3>
+                    <div class="flex-1" id="voltage-chart"></div>
+                </div>
+
+                <!-- Inductor Voltage & Flux Chart -->
+                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 300px;">
+                    <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Inductor Voltage & Flux Linkage</h3>
+                    <div class="flex-1" id="flux-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section: Material Design and Analysis -->
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Left Panel: Material & Core Design -->
+            <section class="col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <h2 class="font-semibold text-sm text-slate-700">Material & Core Design</h2>
+                </div>
+
+                <div class="px-4 pt-4 pb-2 border-b border-slate-200">
+                    <div class="slider-control">
+                        <div class="slider-label">
+                            <label class="text-xs font-medium text-slate-600">Temperature</label>
+                            <span class="slider-value" id="temperature-value">25°C</span>
+                        </div>
+                        <input type="range" id="temperature" min="0" max="100" step="1" value="25">
+                    </div>
+                </div>
+
+                <div class="p-4 space-y-3 overflow-y-auto" id="materials-list">
+                    <!-- Materials will be dynamically generated -->
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Analysis Results -->
+            <section class="col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col" style="min-height: 500px;">
+                <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <h2 class="font-semibold text-sm text-slate-700">AI Analysis Results</h2>
+                    </div>
+                    <div id="active-material-display" class="flex items-center gap-2 text-xs">
+                        <span class="text-slate-500">Showing B-H for:</span>
+                        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                            <div id="active-material-color" class="w-2 h-2 rounded-full"></div>
+                            <span id="active-material-name" class="font-semibold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 grid grid-cols-2 gap-4 flex-1">
+                    <!-- Core Loss Comparison -->
+                    <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col">
+                        <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Core Loss Comparison (W/m³, Total W)</h3>
+                        <!-- <p class="text-xs text-slate-400 text-center mb-3">Click bar to view B-H curves</p> -->
+                        <div class="flex-1" id="loss-chart"></div>
+                    </div>
+
+                    <!-- B-H Charts -->
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col flex-1">
+                            <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Magnetic Flux Density B (T)</h3>
+                            <div class="flex-1" id="b-chart"></div>
+                        </div>
+                        <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col flex-1">
+                            <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Field Strength H (A/m)</h3>
+                            <div class="flex-1" id="h-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let conditions = {
+            dcVoltage: 400,
+            gridVoltage: 220,
+            gridFrequency: 50,
+            power: 2000,
+            frequency: 75000,
+            filterInductance: 1,
+            filterCapacitance: 2,
+            gridImpedance: 0.2,
+            harmonic3: 5,
+            harmonic5: 3,
+            harmonic7: 1,
+            kp: 0.00004,
+            ki: 0.8
+        };
+
+        let topology = 'Single-Phase-full-bridge';
+        let temperature = 25;
+        let isResizePaused = false;
+
+        // 计算函数
+        function calculateAe(R, r, d) {
+            // R, r, d 单位都是 mm，返回 cm²
+            return (R - r) * d / 100; // 转换为 cm²
+        }
+        
+        function calculateLe(R, r) {
+            // R, r 单位都是 mm，返回 mm
+            return Math.PI * (R + r);
+        }
+        
+        function calculateL(R, r, d, N, mu_r) {
+            // R, r, d 单位都是 mm，N 是匝数，mu_r 是相对磁导率
+            // 返回电感值 L（单位：H）
+            // 按照用户公式：L = μ₀ * μᵣ * N² * (R-r) * d / (π * (R+r) * 1000)
+            // 其中 R, r, d 需要转换成 m 进行计算
+            const mu_0 = 4 * Math.PI * 1e-7; // H/m
+            // 转换为米
+            const R_m = R / 1000; // m
+            const r_m = r / 1000; // m
+            const d_m = d / 1000; // m
+            // L = μ₀ * μᵣ * N² * (R-r) * d / (π * (R+r) * 1000)
+            // 注意：公式中的 1000 是单位转换因子
+            const numerator = mu_0 * mu_r * N * N * (R_m - r_m) * d_m;
+            const denominator = Math.PI * (R_m + r_m) * 1000;
+            return numerator / denominator;
+        }
+        
+        // 材料数据结构：R, r, d (mm), N (turns), mu_r (前四个材料)
+        // 默认值计算：Ae = (R-r) * d / 100 (cm²), Le = π * (R+r) (mm)
+        // Material 1: 原 Ae=150 cm², Le=100 mm -> R=50, r=20, d=500 (Ae=150, Le≈220)
+        // Material 2: 原 Ae=120 cm², Le=80 mm -> R=40, r=20, d=600 (Ae=120, Le≈188)
+        // Material 3: 原 Ae=180 cm², Le=120 mm -> R=60, r=30, d=600 (Ae=180, Le≈283)
+        // Material 4: 原 Ae=200 cm², Le=150 mm -> R=50, r=20, d=667 (Ae=200, Le≈220)
+        // Material 5: 原 Ae=160 cm², Le=110 mm -> R=50, r=20, d=533 (Ae=160, Le≈220)
+        let materials = [
+            { id: 1, name: '3C90', R: 0, r: 0, d: 0, turns: 20, mu_r: 2300, baseLossFactor: 1.2, color: '#3b82f6' },
+            { id: 2, name: '3C94', R: 0, r: 0, d: 0, turns: 15, mu_r: 4000, baseLossFactor: 0.8, color: '#10b981' },
+            { id: 3, name: '3E6', R: 0, r: 0, d: 0, turns: 25, mu_r: 6000, baseLossFactor: 1.5, color: '#f59e0b' },
+            { id: 4, name: '3F4', R: 0, r: 0, d: 0, turns: 30, mu_r: 1000, baseLossFactor: 2.1, color: '#ef4444' },
+            { id: 5, name: 'Other Material', R: 0, r: 0, d: 0, turns: 22, mu_r: null, baseLossFactor: 1.0, color: '#8b5cf6' }
+        ];
+        
+        // 为每个材料添加计算属性（动态计算）
+        materials.forEach(mat => {
+            Object.defineProperty(mat, 'ae', {
+                get: function() { return calculateAe(this.R, this.r, this.d); },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(mat, 'le', {
+                get: function() { return calculateLe(this.R, this.r); },
+                enumerable: true,
+                configurable: true
+            });
+            if (mat.mu_r !== null && mat.mu_r !== undefined) {
+                Object.defineProperty(mat, 'L', {
+                    get: function() { return calculateL(this.R, this.r, this.d, this.turns, this.mu_r); },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+        });
+
+        let selectedMaterialIds = [1, 2];
+        let activeMatIds = [1, 2]; // 改为数组，存储所有激活的材料ID，默认选中前两个
+        
+        // 存储预测结果
+        let predictionResults = {}; // {materialId: {H_pred: [], core_loss: number}}
+
+        // Listen for resize pause messages
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'pauseResize') {
+                isResizePaused = event.data.pause;
+                // 如果恢复，清除防抖定时器
+                if (!isResizePaused) {
+                    clearTimeout(resizeUpdateTimeout);
+                    resizeUpdateTimeout = null;
+                }
+            }
+        });
+
+        // Simulation function (from poe-preview.html)
+        function simulateInverter(conditions, topology) {
+            const {
+                dcVoltage,
+                gridVoltage,
+                gridFrequency,
+                power,
+                frequency: switchingFreq,
+                filterInductance: L_mH,
+                gridImpedance,
+                harmonic3,
+                harmonic5,
+                harmonic7,
+                kp,
+                ki
+            } = conditions;
+
+            // --- 1. 参数验证 ---
+            if (L_mH <= 0) throw new Error("滤波电感值必须大于0（mH）");
+            if (gridImpedance < 0) throw new Error("电网阻抗不能为负数");
+            if (dcVoltage <= 0 || gridVoltage <= 0) throw new Error("直流/电网电压必须大于0");
+            if (switchingFreq <= 0 || gridFrequency <= 0) throw new Error("频率必须大于0");
+
+            // --- 2. 基础物理参数 ---
+            const L = L_mH * 1e-3;
+            const f_grid = gridFrequency;
+            const f_sw = switchingFreq;
+            const V_dc = dcVoltage;
+            const omega_grid = 2 * Math.PI * f_grid;
+            const isThreePhase = topology.includes('3Phase');
+
+            // 计算电压峰值
+            const V_grid_peak = isThreePhase
+                ? gridVoltage * Math.sqrt(2)/Math.sqrt(3)  // 线电压有效值 -> 相电压峰值
+                : gridVoltage * Math.sqrt(2);               // 单相有效值 -> 峰值
+
+            // --- 3. 拓扑配置 ---
+            let voltageGain, numPhases, isThreeLevel;
+            switch (topology) {
+                case 'Single-Phase-full-bridge':
+                    voltageGain = 1.0; 
+                    numPhases = 1;
+                    isThreeLevel = false;
+                    break;
+                case '3Phase-full-bridge':
+                    voltageGain = 1.0; 
+                    numPhases = 3;
+                    isThreeLevel = false;
+                    break;
+                case '3Phase-T-Type-Three-level':
+                    voltageGain = 1.0;
+                    numPhases = 3;
+                    isThreeLevel = true;
+                    break;
+                default:
+                    voltageGain = 1.0;
+                    numPhases = 1;
+                    isThreeLevel = false;
+            }
+
+            // --- 4. 仿真步长配置 ---
+            const T_grid = 1 / f_grid;
+            const T_sw = 1 / f_sw;
+            const numGridCycles = 10; 
+            const numStepsPerSwCycle = 200; 
+            const dt = T_sw / numStepsPerSwCycle;
+            const totalTime = numGridCycles * T_grid;
+            const numSteps = Math.floor(totalTime / dt);
+
+            // --- 5. 状态变量 ---
+            const state = {
+                i_L: isThreePhase ? [0, 0, 0] : 0,
+                flux_L: isThreePhase ? [0, 0, 0] : 0, // 磁链状态
+                powerIntegral: 0,
+                lastFluxResetTime: 0,
+                powerIntegralLimit: 5000,
+                lastError: 0
+            };
+
+            // --- 6. 预计算随机相位 ---
+            const harmonicPhases = {
+                3: Math.random() * 2 * Math.PI,
+                5: Math.random() * 2 * Math.PI,
+                7: Math.random() * 2 * Math.PI
+            };
+
+            // --- 7. 核心函数 ---
+
+            function getGridVoltage(t, phaseIndex = 0) {
+                const phaseShift = isThreePhase ? (phaseIndex * -2 * Math.PI / 3) : 0; 
+                const theta = omega_grid * t + phaseShift;
+
+                // 基波
+                let v = V_grid_peak * Math.sin(theta);
+
+                // 谐波
+                if (harmonic3) v += (harmonic3 / 100) * V_grid_peak * Math.sin(3 * theta + harmonicPhases[3]);
+                if (harmonic5) v += (harmonic5 / 100) * V_grid_peak * Math.sin(5 * theta + harmonicPhases[5]);
+                if (harmonic7) v += (harmonic7 / 100) * V_grid_peak * Math.sin(7 * theta + harmonicPhases[7]);
+
+                return v;
+            }
+
+            function getPWMOutput(t, modulationIndex, phaseIndex = 0, powerCtrlOutput = 0) {
+                const phaseShift = isThreePhase ? (phaseIndex * -2 * Math.PI / 3) : 0;
+                
+                // 1. 计算调制波
+                let m = modulationIndex + powerCtrlOutput; 
+                m = Math.max(-1.15, Math.min(1.15, m));
+                
+                const reference = m * Math.sin(omega_grid * t + phaseShift);
+
+                // 2. 生成三角载波
+                const cycleProgress = (t % T_sw) / T_sw; 
+             
+                let triangle0to1;
+                if (cycleProgress < 0.5) {
+                    triangle0to1 = cycleProgress * 2; 
+                } else {
+                    triangle0to1 = 2 - cycleProgress * 2; 
+                }
+
+                // 3. PWM 比较逻辑
+                if (isThreeLevel) {
+                    // 三电平 PD-PWM 逻辑
+                    // 上载波: [0, 1], 下载波: [-1, 0]
+                    // 两个载波相位相同 (Phase Disposition)
+                
+                    const carrierUp = triangle0to1;       // 0 到 1
+                    const carrierDown = triangle0to1 - 1; // -1 到 0
+                
+                    if (reference >= carrierUp) {
+                        return V_dc/2;  // 输出正母线电压
+                    } else if (reference <= carrierDown) {
+                        return -V_dc/2; // 输出负母线电压
+                    } else {
+                        return 0;     // 输出中点电压 (0V)
+                    }
+                } else {
+                    // 两电平逻辑 (兼容旧逻辑)
+                    // 将 [0, 1] 映射到 [-1, 1]
+
+                    const V_half_dc = V_dc / 2; 
+                    const carrierBipolar = triangle0to1 * 2 - 1;
+                    if(numPhases == 1) {
+                        return (reference > carrierBipolar) ? V_dc : -V_dc;
+                    }
+                    if(numPhases == 3) {
+                        return (reference > carrierBipolar) ? V_dc/2 : -V_dc/2;
+                    }
+                }
+            }
+
+            // --- 8. 仿真主循环 ---
+            
+            // 初始化结果对象，确保包含 flux_L 和 v_L
+            const results = { 
+                time: [], 
+                v_grid: [], 
+                v_inv: [], 
+                v_L: [],     // 电感电压
+                pwm: [], 
+                i_L: [],
+                flux_L: []   // 磁链
+            };
+            
+            // 从conditions中获取Kp和Ki，如果没有则使用默认值
+            const Kp = kp !== undefined ? kp : 0.00004; 
+            const Ki = ki !== undefined ? ki : 0.8;
+            
+            const initialModulation = V_grid_peak / V_dc;
+
+            for (let step = 0; step < numSteps; step++) {
+                const t = step * dt;
+
+                // --- 控制回路 ---
+                let currentPower = 0;
+                if (isThreePhase) {
+                    currentPower = 
+                        getGridVoltage(t, 0) * state.i_L[0] +
+                        getGridVoltage(t, 1) * state.i_L[1] +
+                        getGridVoltage(t, 2) * state.i_L[2];
+                } else {
+                    currentPower = getGridVoltage(t) * state.i_L;
+                }
+
+                const powerError = power - currentPower;
+                state.powerIntegral += powerError * dt;
+                state.powerIntegral = Math.max(-state.powerIntegralLimit, Math.min(state.powerIntegralLimit, state.powerIntegral));
+                const m_adjust = (Kp * powerError + Ki * state.powerIntegral) * 0.001; 
+
+                // --- 电路仿真 ---
+                
+                const loopPhases = isThreePhase ? 3 : 1;
+                const v_grid_vals = [];
+                const v_inv_vals = [];
+                const i_L_vals = [];
+                const v_L_vals = []; // 临时存储本步的电感电压
+                const flux_vals = []; // 临时存储本步的磁链
+                
+                let v_common_mode = 0;
+                if (numPhases == 3) {
+                    for (let a = 0; a < loopPhases; a++) {
+                        const v_g = getGridVoltage(t, a);        
+                        v_common_mode += (getPWMOutput(t, initialModulation, a, m_adjust))/ 3;// 对于三相三线，必须减去 V_NO;
+                    }
+                }
+
+                for (let i = 0; i < loopPhases; i++) {
+                    const v_g = getGridVoltage(t, i);
+
+                    // 4. 计算共模电压 (关键修正!)
+                    // 对于单相全桥，不需要减共模（或者说共模相互抵消），直接差分
+                    // 对于三相三线，必须减去 V_NO
+                   
+                    const v_inv = getPWMOutput(t, initialModulation, i, m_adjust);// 对于三相三线，必须减去 V_NO
+
+                    const i_L_prev = isThreePhase ? state.i_L[i] : state.i_L;
+                    
+                    // 计算电感电压: v_L = v_inv - v_grid - i*R
+                    const v_L = v_inv - v_g - (i_L_prev * gridImpedance);
+                    
+                    // 计算电流变化  (Euler法更新电流）
+                    const di = (v_L / L) * dt;
+                    let i_L_new = i_L_prev + di;
+
+                    // 软限流
+                    const absLimit = 2000; 
+                    if (i_L_new > absLimit) i_L_new = absLimit;
+                    if (i_L_new < -absLimit) i_L_new = -absLimit;
+
+                    // --- 磁链计算 (新增部分) ---
+                    if (isThreePhase) {
+                        // 积分: flux = flux + v_L * dt
+                        state.flux_L[i] += v_L * dt;
+                    } else {
+                        state.flux_L += v_L * dt;
+                    }
+
+                    // 更新状态
+                    if (isThreePhase) state.i_L[i] = i_L_new;
+                    else state.i_L = i_L_new;
+
+                    // 记录第一相数据
+                    if (i === 0) {
+                        v_grid_vals.push(v_g);
+                        v_inv_vals.push(v_inv);
+                        i_L_vals.push(i_L_new);
+                        v_L_vals.push(v_L);
+                        flux_vals.push(isThreePhase ? state.flux_L[0] : state.flux_L);
+                    }
+                }
+
+                // --- 数据降采样存储 ---
+                if (step % 10 === 0) {
+                    results.time.push(t);
+                    results.v_grid.push(v_grid_vals[0]);
+                    results.v_inv.push(v_inv_vals[0]);
+                    results.i_L.push(i_L_vals[0]);
+                    results.v_L.push(v_L_vals[0]);     // 存储电感电压
+                    results.flux_L.push(flux_vals[0]); // 存储磁链
+                    results.pwm.push(v_inv_vals[0] / V_dc); 
+                }
+            }
+
+            return results;
+        }
+
+        function generateData(freq, voltage, power, material, harmonics) {
+  const points = 50;
+  const data = [];
+  const baseB = (voltage / (material.ae * material.turns * freq)) * 1000000;
+  const baseH = (power / voltage) * material.turns;
+
+            /*
+  for (let i = 0; i < points; i++) {
+    const t = i / points;
+    const angle = t * 2 * Math.PI;
+    const h3 = (harmonics.h3 / 100) * Math.sin(3 * angle);
+    const h5 = (harmonics.h5 / 100) * Math.sin(5 * angle);
+    const h7 = (harmonics.h7 / 100) * Math.sin(7 * angle);
+    const totalHarmonics = h3 + h5 + h7;
+
+    const inputWave = Math.sin(angle) * voltage + (voltage * totalHarmonics);
+    const outputWave = Math.sin(angle + 0.2) * voltage * 0.9;
+    const bVal = baseB * (Math.sin(angle - 0.1) + totalHarmonics * 0.5) + (Math.random() * 0.01);
+    const hVal = baseH * (Math.sin(angle) + totalHarmonics * 0.2) + (Math.sin(angle * 10) * 0.1 * baseH);
+
+    data.push({
+      time: i,
+      inputVoltage: inputWave,
+      outputVoltage: outputWave,
+      B: bVal,
+      H: hVal,
+    });
+  }
+            */
+  return data;
+        }
+
+        function calculateLosses(materials, freq, voltage, selectedMatIds) {
+  return materials
+    .filter(m => selectedMatIds.includes(m.id))
+    .map(m => {
+      const simulatedB = (voltage / (m.ae * m.turns * freq));
+      const loss_total = (m.baseLossFactor * Math.pow(freq/10000, 1.5) * Math.pow(simulatedB, 2.0));
+      
+      // 计算体积：Ae (cm²) * Le (mm) / 10 = cm³，然后转换为 m³
+      const volume_cm3 = m.ae * m.le / 10; // cm³
+      const volume_m3 = volume_cm3 / 1e6; // m³
+      
+      // 将loss除以体积得到 W/m³
+      const loss_per_volume = volume_m3 > 0 ? loss_total / volume_m3 : 0;
+      
+      return {
+        id: m.id,
+        name: m.name,
+        loss: parseFloat(loss_per_volume.toFixed(2)),
+        loss_total: parseFloat(loss_total.toFixed(2)),
+        color: m.color
+      };
+    });
+        }
+
+        // Initialize sliders
+        function initSliders() {
+            const sliderIds = ['dcVoltage', 'gridVoltage', 'gridFrequency', 'power', 'frequency', 
+                              'filterInductance', 'filterCapacitance', 'gridImpedance', 
+                              'harmonic3', 'harmonic5', 'harmonic7', 'temperature', 'kp', 'ki'];
+            
+            sliderIds.forEach(id => {
+                const slider = document.getElementById(id);
+                const valueDisplay = document.getElementById(id + '-value');
+                
+                if (slider && valueDisplay) {
+                    // 温度滑块特殊处理：只在松开鼠标时触发预测请求
+                    if (id === 'temperature') {
+                        // input 事件：只更新显示的值，不触发预测请求
+                        slider.addEventListener('input', (e) => {
+                            const value = parseFloat(e.target.value);
+                            conditions[id] = value;
+                            temperature = value;
+                            valueDisplay.textContent = value + '°C';
+                        });
+                        
+                        // change 事件：松开鼠标时触发预测请求
+                        slider.addEventListener('change', (e) => {
+                            const value = parseFloat(e.target.value);
+                            conditions[id] = value;
+                            temperature = value;
+                            valueDisplay.textContent = value + '°C';
+                            
+                            // 如果有flux selection，更新B和H图表并重新发送预测请求
+                            if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null && originalFluxData) {
+                                const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+                                const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+                                
+                                if (activeMaterials.length > 0 && fluxValues.length > 0) {
+                                    const allBData = [];
+                                    
+                                    activeMaterials.forEach(activeMaterial => {
+                                        const Ae_m2 = activeMaterial.ae / 10000;
+                                        const N = activeMaterial.turns;
+                                        
+                                        const bData = fluxValues.map((flux_Wb, index) => {
+                                            const B_T = flux_Wb / Ae_m2 / N;
+                                            return {
+                                                time: fluxSelectionStartIndex + index,
+                                                B: B_T * 1000
+                                            };
+                                        });
+                                        
+                                        allBData.push({ material: activeMaterial, data: bData });
+                                    });
+                                    
+                                    updateBChart(allBData);
+                                    // 发送预测请求，预测结果会更新H图表
+                                    requestPredictions();
+                                }
+                            } else {
+                                updateChartsWithoutResettingFlux();
+                            }
+                        });
+                    } else {
+                        // 其他滑块：使用 input 事件
+                        slider.addEventListener('input', (e) => {
+                            const value = parseFloat(e.target.value);
+                            conditions[id] = value;
+                            
+                            // 如果Filter L改变，重新计算所有材料的N推荐值
+                            if (id === 'filterInductance') {
+                                recalculateNForAllMaterials();
+                            }
+                            
+                            let unit = '';
+                            if (id.includes('Voltage')) unit = 'V';
+                            else if (id.includes('Frequency') || id === 'frequency') unit = 'Hz';
+                            else if (id === 'power') unit = 'W';
+                            else if (id === 'filterInductance') unit = 'mH';
+                            else if (id === 'filterCapacitance') unit = 'uF';
+                            else if (id === 'gridImpedance') unit = 'Ω';
+                            else if (id.includes('harmonic')) unit = '%';
+                            else if (id === 'kp') unit = '';
+                            else if (id === 'ki') unit = '';
+                            
+                            valueDisplay.textContent = value + unit;
+                            updateCharts();
+                        });
+                    }
+                    
+                    // Set initial value
+                    const value = parseFloat(slider.value);
+                    let unit = '';
+                    if (id.includes('Voltage')) unit = 'V';
+                    else if (id.includes('Frequency') || id === 'frequency') unit = 'Hz';
+                    else if (id === 'power') unit = 'W';
+                    else if (id === 'filterInductance') unit = 'mH';
+                    else if (id === 'filterCapacitance') unit = 'uF';
+                    else if (id === 'gridImpedance') unit = 'Ω';
+                    else if (id.includes('harmonic')) unit = '%';
+                    else if (id === 'temperature') unit = '°C';
+                    else if (id === 'kp') unit = '';
+                    else if (id === 'ki') unit = '';
+                    
+                    valueDisplay.textContent = value + unit;
+                }
+            });
+        }
+
+        // Initialize topology selector
+        function initTopology() {
+            const select = document.getElementById('topology-select');
+            const diagram = document.getElementById('topology-diagram');
+            
+            select.addEventListener('change', (e) => {
+                topology = e.target.value;
+                updateTopologyDiagram();
+                updateCharts();
+            });
+            
+            updateTopologyDiagram();
+        }
+
+        function updateTopologyDiagram() {
+            const diagram = document.getElementById('topology-diagram');
+            const imageMap = {
+                'Single-Phase-full-bridge': '/static/images/spfb.png',
+                '3Phase-full-bridge': '/static/images/3pfb.png',
+                '3Phase-T-Type-Three-level': '/static/images/Ttype.png'
+            };
+            
+            diagram.innerHTML = `
+                <svg viewBox="0 0 200 150" class="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                    <image href="${imageMap[topology]}" x="0" y="0" width="200" height="150" preserveAspectRatio="xMidYMid meet"></image>
+                </svg>
+            `;
+        }
+
+        // Initialize preset buttons
+        function initPresets() {
+            document.getElementById('preset-industrial').addEventListener('click', () => {
+                conditions.gridVoltage = 220;
+                conditions.gridFrequency = 50;
+                conditions.gridImpedance = 0.5;
+                conditions.power = 15000;
+                conditions.harmonic3 = 1;
+                conditions.harmonic5 = 0.5;
+                conditions.harmonic7 = 0.3;
+                updateAllSliders();
+                updateCharts();
+            });
+
+            document.getElementById('preset-residential').addEventListener('click', () => {
+                conditions.gridVoltage = 230;
+                conditions.gridFrequency = 50;
+                conditions.gridImpedance = 1.0;
+                conditions.power = 5000;
+                conditions.harmonic3 = 2;
+                conditions.harmonic5 = 1.5;
+                conditions.harmonic7 = 1;
+                updateAllSliders();
+                updateCharts();
+            });
+
+            document.getElementById('preset-weak-grid').addEventListener('click', () => {
+                conditions.gridVoltage = 220;
+                conditions.gridFrequency = 50;
+                conditions.gridImpedance = 3.0;
+                conditions.power = 3000;
+                conditions.harmonic3 = 4;
+                conditions.harmonic5 = 3;
+                conditions.harmonic7 = 2;
+                updateAllSliders();
+                updateCharts();
+            });
+        }
+
+        function updateAllSliders() {
+            Object.keys(conditions).forEach(key => {
+                const slider = document.getElementById(key);
+                const valueDisplay = document.getElementById(key + '-value');
+                if (slider) {
+                    slider.value = conditions[key];
+                    if (valueDisplay) {
+                        let unit = '';
+                        if (key.includes('Voltage')) unit = 'V';
+                        else if (key.includes('Frequency') || key === 'frequency') unit = 'Hz';
+                        else if (key === 'power') unit = 'W';
+                        else if (key === 'filterInductance') unit = 'mH';
+                        else if (key === 'filterCapacitance') unit = 'uF';
+                        else if (key === 'gridImpedance') unit = 'Ω';
+                        else if (key.includes('harmonic')) unit = '%';
+                        valueDisplay.textContent = conditions[key] + unit;
+                    }
+                }
+            });
+        }
+
+        // Initialize materials list
+        function initMaterials() {
+            const materialsList = document.getElementById('materials-list');
+            materialsList.innerHTML = '';
+            
+            materials.forEach(mat => {
+                const isSelected = selectedMaterialIds.includes(mat.id);
+                const matDiv = document.createElement('div');
+                // 根据选中状态设置不同的样式
+                const baseClasses = 'border rounded-lg p-3 cursor-pointer transition-all duration-200';
+                const selectedClasses = isSelected 
+                    ? 'border-blue-500 bg-blue-50 shadow-sm' 
+                    : 'border-slate-200 bg-slate-50 hover:bg-slate-100';
+                matDiv.className = `${baseClasses} ${selectedClasses}`;
+                matDiv.setAttribute('data-material-id', mat.id);
+                matDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <div class="w-3 h-3 rounded-full flex-shrink-0 flex items-center justify-center" style="background-color: ${mat.color};">
+                            ${isSelected ? '<svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
+                        </div>
+                        <span class="text-xs font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-700'}">${mat.name}</span>
+                    </div>
+                    ${isSelected ? `
+                        <div class="space-y-2 mt-2">
+                            <div class="flex flex-wrap gap-2">
+                                <div class="flex items-center gap-1">
+                                    <label class="text-xs text-slate-600 whitespace-nowrap">R:</label>
+                                    <input type="number" class="material-R w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                           data-id="${mat.id}" value="${mat.R}" min="0" max="500" step="1" onclick="event.stopPropagation()">
+                                    <span class="text-xs text-slate-500">mm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label class="text-xs text-slate-600 whitespace-nowrap">r:</label>
+                                    <input type="number" class="material-r w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                           data-id="${mat.id}" value="${mat.r}" min="0" max="400" step="1" onclick="event.stopPropagation()">
+                                    <span class="text-xs text-slate-500">mm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label class="text-xs text-slate-600 whitespace-nowrap">d:</label>
+                                    <input type="number" class="material-d w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                           data-id="${mat.id}" value="${mat.d}" min="0" max="2000" step="10" onclick="event.stopPropagation()">
+                                    <span class="text-xs text-slate-500">mm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label class="text-xs text-slate-600 whitespace-nowrap">N:</label>
+                                    <input type="number" class="material-turns w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                           data-id="${mat.id}" value="${mat.turns}" min="5" max="200" step="1" onclick="event.stopPropagation()">
+                                    <span class="text-xs text-slate-500">turns</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3 text-xs text-slate-600 pt-1 border-t border-slate-200">
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">Ae:</span>
+                                    <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">Le:</span>
+                                    <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                </div>
+                                ${mat.mu_r !== null && mat.mu_r !== undefined ? `
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">L:</span>
+                                    <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                materialsList.appendChild(matDiv);
+            });
+
+            // Add click event listeners to material items
+            document.querySelectorAll('[data-material-id]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    // 如果点击的是输入框本身，不触发选择（stopPropagation 已经在输入框上处理）
+                    if (e.target.tagName === 'INPUT') {
+                        return;
+                    }
+                    const id = parseInt(item.getAttribute('data-material-id'));
+                    toggleMaterialSelection(id);
+                });
+            });
+
+            document.querySelectorAll('.material-R, .material-r, .material-d, .material-turns').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    let field = '';
+                    if (e.target.classList.contains('material-R')) field = 'R';
+                    else if (e.target.classList.contains('material-r')) field = 'r';
+                    else if (e.target.classList.contains('material-d')) field = 'd';
+                    else if (e.target.classList.contains('material-turns')) field = 'turns';
+                    handleMaterialUpdate(id, field, e.target.value);
+                });
+            });
+            
+            // 更新显示的计算值
+            document.querySelectorAll('.material-R, .material-r, .material-d, .material-turns').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const mat = materials.find(m => m.id === id);
+                    if (mat) {
+                        // 更新输入值
+                        const field = e.target.classList.contains('material-R') ? 'R' : 
+                                    e.target.classList.contains('material-r') ? 'r' : 
+                                    e.target.classList.contains('material-d') ? 'd' : 'turns';
+                        const value = parseFloat(e.target.value) || 0;
+                        
+                        // 如果是R改变，触发自动计算r和d
+                        if (field === 'R' && value > 0) {
+                            // 临时更新R以计算推荐值
+                            const oldR = mat.R;
+                            mat.R = value;
+                            
+                            // 计算推荐值：r = 0.4R, d = 0.3R
+                            const ranges = {
+                                'r': { min: 0, max: 400 },
+                                'd': { min: 0, max: 2000 }
+                            };
+                            const recommended_r = 0.4 * value;
+                            const recommended_d = 0.3 * value;
+                            const r_final = Math.max(ranges.r.min, Math.min(ranges.r.max, recommended_r));
+                            const d_final = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
+                            
+                            mat.r = r_final;
+                            mat.d = d_final;
+                            
+                            // 更新r和d的输入框
+                            const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
+                            const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
+                            if (rInput && rInput !== e.target) rInput.value = r_final.toFixed(1);
+                            if (dInput && dInput !== e.target) dInput.value = d_final.toFixed(1);
+                            
+                            // 如果L已经计算出来，计算N的推荐值
+                            if (mat.mu_r !== null && mat.mu_r !== undefined) {
+                                const L_target = conditions.filterInductance / 1000; // 转换为H
+                                const mu_0 = 4 * Math.PI * 1e-7; // H/m
+                                const R_m = mat.R / 1000; // m
+                                const r_m = mat.r / 1000; // m
+                                const d_m = mat.d / 1000; // m
+                                
+                                // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+                                const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
+                                const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
+                                const recommended_N = Math.sqrt(numerator / denominator);
+                                const N_final = Math.max(5, Math.min(200, Math.round(recommended_N)));
+                                mat.turns = N_final;
+                                
+                                const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
+                                if (nInput) nInput.value = N_final;
+                            }
+                        } else {
+                            mat[field] = value;
+                        }
+                        
+                        // 更新显示的计算值
+                        const matDiv = e.target.closest('[data-material-id]');
+                        if (matDiv) {
+                            const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                            if (calcDiv) {
+                                calcDiv.innerHTML = `
+                                    <div class="flex items-center gap-1">
+                                        <span class="font-semibold">Ae:</span>
+                                        <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="font-semibold">Le:</span>
+                                        <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                    </div>
+                                    ${mat.mu_r !== null && mat.mu_r !== undefined ? `
+                                    <div class="flex items-center gap-1">
+                                        <span class="font-semibold">L:</span>
+                                        <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                    </div>
+                                    ` : ''}
+                                `;
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Add inductor structure diagram (显示第一个激活的材料)
+            const activeMaterial = materials.find(m => m.id === activeMatIds[0]);
+            if (activeMaterial) {
+                const structureDiv = document.createElement('div');
+                structureDiv.className = 'mt-4 border-t border-slate-200 pt-4';
+                structureDiv.innerHTML = `
+                    <h3 class="text-xs font-semibold text-slate-700 mb-3 mt-1">Inductor Structure</h3>
+                    <div class="bg-white rounded-lg border border-slate-200 p-2 flex justify-center" style="padding-top: 0;">
+                        <svg viewBox="0 0 300 240" preserveAspectRatio="xMidYMid meet" style="max-width: 50%; max-height: 50%;">
+                            <image href="/static/images/inductor.png" x="0" y="0" width="300" height="240" preserveAspectRatio="xMidYMid meet"></image>
+                        </svg>
+                    </div>
+                `;
+                materialsList.appendChild(structureDiv);
+            }
+
+            updateActiveMaterialDisplay();
+        }
+
+        function toggleMaterialSelection(id) {
+            if (selectedMaterialIds.includes(id)) {
+                if (selectedMaterialIds.length > 1) {
+                    selectedMaterialIds = selectedMaterialIds.filter(matId => matId !== id);
+                    // 如果取消选中的材料在 activeMatIds 中，也移除它
+                    activeMatIds = activeMatIds.filter(matId => matId !== id);
+                    // 如果 activeMatIds 为空，则添加第一个选中的材料
+                    if (activeMatIds.length === 0 && selectedMaterialIds.length > 0) {
+                        activeMatIds = [selectedMaterialIds[0]];
+                    }
+                }
+            } else {
+                selectedMaterialIds.push(id);
+                // 如果新选中的材料不在 activeMatIds 中，添加它
+                if (!activeMatIds.includes(id)) {
+                    activeMatIds.push(id);
+                }
+            }
+            initMaterials();
+            // 不调用 updateCharts()，因为会重置 flux selection
+            // 只更新 B/H chart（如果有选中的 flux 区域）
+            updateBAndHChartsFromFluxSelection();
+            // 材料选择改变时，如果有flux selection，重新发送预测请求
+            if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null) {
+                requestPredictions();
+            }
+        }
+
+        // 当Filter L改变时，重新计算所有材料的N推荐值
+        function recalculateNForAllMaterials() {
+            materials.forEach(mat => {
+                if (mat.mu_r !== null && mat.mu_r !== undefined) {
+                    const L_target = conditions.filterInductance / 1000; // 转换为H
+                    const mu_0 = 4 * Math.PI * 1e-7; // H/m
+                    const R_m = mat.R / 1000; // m
+                    const r_m = mat.r / 1000; // m
+                    const d_m = mat.d / 1000; // m
+                    
+                    // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+                    const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
+                    const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
+                    const recommended_N = Math.sqrt(numerator / denominator);
+                    
+                    const N_final = Math.max(5, Math.min(200, Math.round(recommended_N)));
+                    mat.turns = N_final;
+                    
+                    // 更新N的输入框
+                    const nInput = document.querySelector(`.material-turns[data-id="${mat.id}"]`);
+                    if (nInput) nInput.value = N_final;
+                    
+                    // 更新显示的计算值
+                    const matDiv = document.querySelector(`[data-material-id="${mat.id}"]`);
+                    if (matDiv) {
+                        const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                        if (calcDiv) {
+                            calcDiv.innerHTML = `
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">Ae:</span>
+                                    <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">Le:</span>
+                                    <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-semibold">L:</span>
+                                    <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            });
+        }
+
+        function handleMaterialUpdate(id, field, value) {
+            const mat = materials.find(m => m.id === id);
+            if (mat) {
+                let numValue = parseFloat(value) || 0;
+                
+                // 验证并限制值在范围内
+                const ranges = {
+                    'R': { min: 0, max: 500 },
+                    'r': { min: 0, max: 400 },
+                    'd': { min: 0, max: 2000 },
+                    'turns': { min: 5, max: 200 }
+                };
+                
+                const range = ranges[field];
+                if (range) {
+                    if (numValue < range.min) {
+                        numValue = range.min;
+                    } else if (numValue > range.max) {
+                        numValue = range.max;
+                    }
+                    // 更新输入框显示的值
+                    const input = document.querySelector(`.material-${field}[data-id="${id}"]`);
+                    if (input) {
+                        input.value = numValue;
+                    }
+                }
+                
+                // 当R改变时，自动计算r和d的推荐值
+                if (field === 'R') {
+                    // 验证 R > r
+                    if (numValue <= mat.r) {
+                        numValue = mat.r + 1;
+                        const input = document.querySelector(`.material-R[data-id="${id}"]`);
+                        if (input) input.value = numValue;
+                    }
+                    mat.R = numValue;
+                    
+                    // 自动设置推荐值：r = 0.4R, d = 0.3R
+                    const recommended_r = 0.4 * numValue;
+                    const recommended_d = 0.3 * numValue;
+                    
+                    // 检查推荐值是否在范围内
+                    const r_final = Math.max(ranges.r.min, Math.min(ranges.r.max, recommended_r));
+                    const d_final = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
+                    
+                    mat.r = r_final;
+                    mat.d = d_final;
+                    
+                    // 更新r和d的输入框
+                    const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
+                    const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
+                    if (rInput) rInput.value = r_final;
+                    if (dInput) dInput.value = d_final;
+                    
+                    // 如果L已经计算出来（有mu_r），计算N的推荐值
+                    if (mat.mu_r !== null && mat.mu_r !== undefined) {
+                        // 使用Filter L作为目标电感值
+                        const L_target = conditions.filterInductance / 1000; // 转换为H
+                        // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+                        const mu_0 = 4 * Math.PI * 1e-7; // H/m
+                        const R_m = mat.R / 1000; // m
+                        const r_m = mat.r / 1000; // m
+                        const d_m = mat.d / 1000; // m
+                        
+                        const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
+                        const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
+                        const recommended_N = Math.sqrt(numerator / denominator);
+                        
+                        // 限制N在合理范围内
+                        const N_final = Math.max(ranges.turns.min, Math.min(ranges.turns.max, Math.round(recommended_N)));
+                        mat.turns = N_final;
+                        
+                        // 更新N的输入框
+                        const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
+                        if (nInput) nInput.value = N_final;
+                    }
+                } else {
+                    // 验证 R > r
+                    if (field === 'R' && numValue <= mat.r) {
+                        numValue = mat.r + 1;
+                        const input = document.querySelector(`.material-R[data-id="${id}"]`);
+                        if (input) input.value = numValue;
+                    }
+                    if (field === 'r' && numValue >= mat.R) {
+                        numValue = mat.R - 1;
+                        const input = document.querySelector(`.material-r[data-id="${id}"]`);
+                        if (input) input.value = numValue;
+                    }
+                    
+                    mat[field] = numValue;
+                    
+                    // 如果r或d改变，且L已经计算出来，重新计算N的推荐值
+                    if ((field === 'r' || field === 'd') && mat.mu_r !== null && mat.mu_r !== undefined) {
+                        const L_target = conditions.filterInductance / 1000; // 转换为H
+                        const mu_0 = 4 * Math.PI * 1e-7; // H/m
+                        const R_m = mat.R / 1000; // m
+                        const r_m = mat.r / 1000; // m
+                        const d_m = mat.d / 1000; // m
+                        
+                        // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+                        const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
+                        const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
+                        const recommended_N = Math.sqrt(numerator / denominator);
+                        
+                        const N_final = Math.max(ranges.turns.min, Math.min(ranges.turns.max, Math.round(recommended_N)));
+                        mat.turns = N_final;
+                        
+                        const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
+                        if (nInput) nInput.value = N_final;
+                    }
+                }
+                
+                // 更新显示的计算值
+                const matDiv = document.querySelector(`[data-material-id="${id}"]`);
+                if (matDiv) {
+                    const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                    if (calcDiv) {
+                        calcDiv.innerHTML = `
+                            <div class="flex items-center gap-1">
+                                <span class="font-semibold">Ae:</span>
+                                <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="font-semibold">Le:</span>
+                                <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                            </div>
+                            ${mat.mu_r !== null && mat.mu_r !== undefined ? `
+                            <div class="flex items-center gap-1">
+                                <span class="font-semibold">L:</span>
+                                <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                            </div>
+                            ` : ''}
+                        `;
+                    }
+                }
+                
+                // 不调用 updateCharts()，因为会重置 flux selection
+                // 只更新 B/H chart（如果有选中的 flux 区域）
+                updateBAndHChartsFromFluxSelection();
+                
+                // 如果更新的材料在选中的材料列表中，且有 flux selection，自动触发预测
+                if (selectedMaterialIds.includes(id) && 
+                    fluxSelectionStartIndex !== null && 
+                    fluxSelectionEndIndex !== null) {
+                    requestPredictions();
+                }
+            }
+        }
+        
+        // 根据选中的 flux 区域更新 B 和 H chart
+        function updateBAndHChartsFromFluxSelection() {
+            // 如果有选中的 flux 区域，更新 B chart
+            if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null && originalFluxData) {
+                const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+                const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+                
+                if (activeMaterials.length > 0 && fluxValues.length > 0) {
+                    const allBData = [];
+                    
+                    activeMaterials.forEach(activeMaterial => {
+                        const Ae_m2 = activeMaterial.ae / 10000; // 平方厘米转平方米
+                        const N = activeMaterial.turns;
+                        
+                        const bData = fluxValues.map((flux_Wb, index) => {
+                            const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
+                            return {
+                                time: fluxSelectionStartIndex + index,
+                                B: B_T * 1000 // 转换为毫特斯拉用于数据格式兼容
+                            };
+                        });
+                        
+                        allBData.push({ material: activeMaterial, data: bData });
+                    });
+                    
+                    updateBChart(allBData);
+                    // H chart 的更新将在预测请求完成后实现
+                    // updateHChart(allHData);
+                }
+            } else {
+                // 如果没有选中的区域，正常更新所有图表
+                updateCharts();
+            }
+        }
+        
+        // 显示加载遮罩
+        function showLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        }
+        
+        // 隐藏加载遮罩
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+        }
+        
+        // 发送预测请求
+        async function requestPredictions() {
+            // 检查是否有flux selection
+            if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null || !originalFluxData || !originalTimeData) {
+                return;
+            }
+            
+            const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+            const selectedMaterials = materials.filter(m => selectedMaterialIds.includes(m.id));
+            
+            if (selectedMaterials.length === 0 || fluxValues.length === 0) {
+                return;
+            }
+            
+            // 计算选中区域的真实时间
+            const timeValues = originalTimeData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+            const realTime = timeValues.length > 1 ? timeValues[timeValues.length - 1] - timeValues[0] : 0;
+            
+            // 显示加载遮罩
+            showLoadingOverlay();
+            
+            try {
+                // 为每个选中的材料发送预测请求
+                const predictionPromises = selectedMaterials.map(async (material) => {
+                    // 验证材料参数
+                    if (material.ae <= 0 || material.le <= 0 || material.turns <= 0) {
+                        console.warn(`Material ${material.name} has invalid parameters (Ae: ${material.ae}, Le: ${material.le}, turns: ${material.turns}). Skipping prediction.`);
+                        return;
+                    }
+                    
+                    // 计算B值
+                    const Ae_m2 = material.ae / 10000; // 平方厘米转平方米
+                    const N = material.turns;
+                    const B_values = fluxValues.map((flux_Wb) => {
+                        const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
+                        return B_T; // 返回特斯拉单位
+                    });
+                    
+                    // 发送预测请求
+                    try {
+                        const response = await fetch('/api/predict', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                materialId: material.id,
+                                sample: {
+                                    B: B_values,
+                                    T: temperature,
+                                    real_time: realTime  // 传递真实时间
+                                }
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Prediction failed for ${material.name}: ${response.statusText}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // H 缩放：缩放比例 = Lstd / Le，Lstd = 85.5mm
+                        const Lstd = 85.5; // mm
+                        const scaleFactor = material.le > 0 ? Lstd / material.le : 1.0; // 避免除以零
+                        const H_scaled = result.H_pred.map(h => h * scaleFactor);
+                        
+                        // 存储预测结果（使用缩放后的H）
+                        predictionResults[material.id] = {
+                            H_pred: H_scaled,
+                            core_loss: result.core_loss
+                        };
+                        
+                        console.log(`Prediction for ${material.name}:`, {
+                            ...result,
+                            H_pred_scaled: H_scaled,
+                            scaleFactor: scaleFactor,
+                            Le: material.le
+                        });
+                    } catch (error) {
+                        console.error(`Error predicting for ${material.name}:`, error);
+                        throw error;
+                    }
+                });
+                
+                // 等待所有预测完成
+                await Promise.all(predictionPromises);
+                
+                // 更新H图表和Loss图表
+                updateHChartFromPredictions();
+                updateLossChartFromPredictions();
+            } catch (error) {
+                console.error('Prediction error:', error);
+                // Show error message
+                alert('Prediction failed, please try again');
+            } finally {
+                // 隐藏加载遮罩
+                hideLoadingOverlay();
+            }
+        }
+        
+        // 从预测结果更新H图表
+        function updateHChartFromPredictions() {
+            if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null) {
+                return;
+            }
+            
+            const selectedMaterials = materials.filter(m => selectedMaterialIds.includes(m.id));
+            const dataLength = fluxSelectionEndIndex - fluxSelectionStartIndex + 1;
+            
+            const allHData = selectedMaterials
+                .filter(m => predictionResults[m.id] && predictionResults[m.id].H_pred)
+                .map(material => {
+                    const H_pred = predictionResults[material.id].H_pred;
+                    // 确保长度匹配
+                    const hData = H_pred.slice(0, dataLength).map((h, index) => ({
+                        time: fluxSelectionStartIndex + index,
+                        H: h
+                    }));
+                    
+                    return { material: material, data: hData };
+                });
+            
+            if (allHData.length > 0) {
+                updateHChart(allHData);
+            }
+        }
+        
+        // 从预测结果更新Loss图表
+        function updateLossChartFromPredictions() {
+            const lossData = materials
+                .filter(m => selectedMaterialIds.includes(m.id))
+                .map(m => {
+                    let loss_total = 0;
+                    if (predictionResults[m.id] && predictionResults[m.id].core_loss !== undefined) {
+                        loss_total = predictionResults[m.id].core_loss;
+                    } else {
+                        // 如果没有预测结果，使用默认计算
+                        const simulatedB = (conditions.dcVoltage / (m.ae * m.turns * conditions.frequency));
+                        loss_total = (m.baseLossFactor * Math.pow(conditions.frequency/10000, 1.5) * Math.pow(simulatedB, 2.0));
+                    }
+                    
+                    // 计算体积：Ae (cm²) * Le (mm) / 10 = cm³，然后转换为 m³
+                    const volume_cm3 = m.ae * m.le / 10; // cm³
+                    const volume_m3 = volume_cm3 / 1e6; // m³
+                    
+                    // 将loss除以体积得到 W/m³
+                    const loss_per_volume = volume_m3 > 0 ? loss_total / volume_m3 : 0;
+                    
+                    return {
+                        id: m.id,
+                        name: m.name,
+                        loss: loss_per_volume,
+                        loss_total: loss_total,
+                        color: m.color
+                    };
+                });
+            
+            updateLossChart(lossData);
+        }
+
+        function updateActiveMaterialDisplay() {
+            const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+            const displayElement = document.getElementById('active-material-display');
+            
+            if (activeMaterials.length > 0) {
+                // 显示所有激活的材料
+                const materialsHtml = activeMaterials.map(mat => 
+                    `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                        <div class="w-2 h-2 rounded-full" style="background-color: ${mat.color};"></div>
+                        <span class="font-semibold">${mat.name}</span>
+                    </div>`
+                ).join('');
+                
+                displayElement.innerHTML = `
+                    <span class="text-slate-500">Showing B-H for:</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${materialsHtml}
+                    </div>
+                `;
+            } else {
+                displayElement.innerHTML = `
+                    <span class="text-slate-500">No active materials</span>
+                `;
+            }
+        }
+
+        // Chart initialization and updates
+        let voltageChart, fluxChart, lossChart, bChart, hChart;
+        let resizeUpdateTimeout = null;
+
+        function updateCharts() {
+            // 如果处于暂停状态，跳过更新
+            if (isResizePaused) {
+                return;
+            }
+            
+            // Reset flux selection when conditions change (只在 conditions 改变时重置)
+            // 注意：这个函数在 conditions 改变时调用，所以重置是合理的
+            fluxSelectionStartIndex = null;
+            fluxSelectionEndIndex = null;
+            
+            updateChartsWithoutResettingFlux();
+        }
+        
+        function updateChartsWithoutResettingFlux() {
+            // 如果处于暂停状态，跳过更新
+            if (isResizePaused) {
+                return;
+            }
+            
+            const simulationData = simulateInverter(conditions, topology);
+            const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+            
+            if (activeMaterials.length > 0) {
+                // 为所有激活的材料生成数据
+                const allBData = [];
+                const allHData = [];
+                
+                activeMaterials.forEach(activeMaterial => {
+                    const chartData = generateData(
+                        conditions.frequency,
+                        conditions.dcVoltage,
+                        conditions.power,
+                        activeMaterial,
+                        { h3: conditions.harmonic3, h5: conditions.harmonic5, h7: conditions.harmonic7 }
+                    );
+                    allBData.push({ material: activeMaterial, data: chartData });
+                    allHData.push({ material: activeMaterial, data: chartData });
+                });
+                
+                // 更新图表，显示所有激活的材料
+                updateBChart(allBData);
+                updateHChart(allHData);
+            }
+
+            // 如果有预测结果，使用预测结果更新Loss图表，否则使用默认计算
+            if (Object.keys(predictionResults).length > 0 && fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null) {
+                updateLossChartFromPredictions();
+            } else {
+                const lossData = calculateLosses(materials, conditions.frequency, conditions.dcVoltage, selectedMaterialIds);
+                updateLossChart(lossData);
+            }
+            updateVoltageChart(simulationData);
+            updateFluxChart(simulationData);
+        }
+        
+        // 防抖的 resize 处理函数
+        function handleResize() {
+            if (isResizePaused) {
+                return;
+            }
+            
+            clearTimeout(resizeUpdateTimeout);
+            resizeUpdateTimeout = setTimeout(() => {
+                if (!isResizePaused && voltageChart && fluxChart && lossChart && bChart && hChart) {
+                    // 使用 requestAnimationFrame 确保在下一帧更新
+                    requestAnimationFrame(() => {
+                        if (!isResizePaused) {
+                            voltageChart.resize();
+                            fluxChart.resize();
+                            lossChart.resize();
+                            bChart.resize();
+                            hChart.resize();
+                        }
+                    });
+                }
+            }, 100);
+        }
+        
+        // 监听窗口 resize 事件
+        window.addEventListener('resize', handleResize, { passive: true });
+
+        function updateVoltageChart(data) {
+            const chartData = data.time.map((t, i) => ({
+                time: (t * 1000).toFixed(2),
+                v_grid: data.v_grid[i],
+                v_inv: data.v_inv[i]
+            }));
+
+            const container = document.getElementById('voltage-chart');
+            container.innerHTML = '<canvas id="voltage-canvas"></canvas>';
+            const ctx = document.getElementById('voltage-canvas').getContext('2d');
+            
+            if (voltageChart) voltageChart.destroy();
+            
+            // Create draggable handle element
+            const canvas = document.getElementById('voltage-canvas');
+            const draggableHandle = document.createElement('div');
+            draggableHandle.id = 'voltage-draggable-handle';
+            draggableHandle.style.cssText = `
+                position: absolute;
+                width: 4px;
+                height: 100%;
+                background-color: #3b82f6;
+                cursor: ew-resize;
+                opacity: 0.6;
+                z-index: 10;
+                pointer-events: auto;
+                display: none;
+            `;
+            container.style.position = 'relative';
+            container.appendChild(draggableHandle);
+            
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragStartMin = 0;
+            let dragStartMax = 0;
+            
+            voltageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.time),
+                    datasets: [
+                        {
+                            label: 'Grid',
+                            data: chartData.map(d => d.v_grid),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Inverter',
+                            data: chartData.map(d => d.v_inv),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false, // 禁用动画以提高性能
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} V`
+                            }
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                                onZoom: ({ chart }) => {
+                                    if (!isSyncingCharts && fluxChart) {
+                                        isSyncingCharts = true;
+                                        syncXAxisToFluxChart(chart);
+                                        resetFluxSelection();
+                                        isSyncingCharts = false;
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                onPan: ({ chart }) => {
+                                    if (!isSyncingCharts && fluxChart) {
+                                        isSyncingCharts = true;
+                                        syncXAxisToFluxChart(chart);
+                                        resetFluxSelection();
+                                        isSyncingCharts = false;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time (ms)', font: { size: 10 } },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Grid Voltage (V)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Inverter Voltage (V)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } },
+                            grid: { drawOnChartArea: false }
+                        }
+                    },
+                    onHover: (event, activeElements) => {
+                        if (voltageChart && voltageChart.chartArea && !isDragging) {
+                            const chartArea = voltageChart.chartArea;
+                            const rect = container.getBoundingClientRect();
+                            const mouseX = event.native.clientX - rect.left;
+                            
+                            if (mouseX >= chartArea.left && mouseX <= chartArea.right) {
+                                draggableHandle.style.display = 'block';
+                                const handleX = mouseX - 2; // Center the 4px handle
+                                draggableHandle.style.left = handleX + 'px';
+                            } else {
+                                draggableHandle.style.display = 'none';
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Draggable handle event handlers
+            draggableHandle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                dragStartX = e.clientX;
+                const xScale = voltageChart.scales.x;
+                dragStartMin = xScale.min;
+                dragStartMax = xScale.max;
+                draggableHandle.style.opacity = '1';
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && voltageChart && voltageChart.chartArea) {
+                    const rect = container.getBoundingClientRect();
+                    const deltaX = e.clientX - dragStartX;
+                    const chartArea = voltageChart.chartArea;
+                    const xScale = voltageChart.scales.x;
+                    const width = chartArea.right - chartArea.left;
+                    
+                    // Calculate the range
+                    const range = dragStartMax - dragStartMin;
+                    const deltaRange = (deltaX / width) * range;
+                    
+                    // Update x-axis limits
+                    const newMin = dragStartMin - deltaRange;
+                    const newMax = dragStartMax - deltaRange;
+                    
+                    // Clamp to data bounds
+                    const dataMin = 0;
+                    const dataMax = chartData.length - 1;
+                    const clampedMin = Math.max(dataMin, Math.min(newMin, dataMax - 1));
+                    const clampedMax = Math.min(dataMax, Math.max(newMax, clampedMin + 1));
+                    
+                    xScale.options.min = clampedMin;
+                    xScale.options.max = clampedMax;
+                    voltageChart.update('none');
+                    
+                    // Sync to flux chart
+                    if (!isSyncingCharts && fluxChart) {
+                        isSyncingCharts = true;
+                        syncXAxisToFluxChart(voltageChart);
+                        resetFluxSelection();
+                        isSyncingCharts = false;
+                    }
+                    
+                    // Update handle position
+                    const mouseX = e.clientX - rect.left;
+                    if (mouseX >= chartArea.left && mouseX <= chartArea.right) {
+                        const handleX = mouseX - 2; // Center the 4px handle
+                        draggableHandle.style.left = handleX + 'px';
+                    }
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    draggableHandle.style.opacity = '0.6';
+                }
+            });
+            
+            // Hide handle when mouse leaves chart area
+            container.addEventListener('mouseleave', () => {
+                if (!isDragging) {
+                    draggableHandle.style.display = 'none';
+                }
+            });
+            
+            // Reset flux selection on wheel zoom
+            canvas.addEventListener('wheel', () => {
+                setTimeout(() => {
+                    if (!isSyncingCharts) {
+                        resetFluxSelection();
+                    }
+                }, 100);
+            }, { passive: true });
+        }
+
+        // Store original flux data for selection
+        let originalFluxData = null;
+        // Store original time data for calculating real time period
+        let originalTimeData = null;
+        // Store selected flux indices (null means no selection)
+        let fluxSelectionStartIndex = null;
+        let fluxSelectionEndIndex = null;
+        
+        // Global function to reset flux selection (can be called from anywhere)
+        function resetFluxSelection() {
+            if (fluxSelectionStartIndex !== null || fluxSelectionEndIndex !== null) {
+                fluxSelectionStartIndex = null;
+                fluxSelectionEndIndex = null;
+                // 清除预测结果
+                if (typeof predictionResults !== 'undefined') {
+                    predictionResults = {};
+                }
+                // 更新图表以移除选择区域显示
+                if (fluxChart) {
+                    fluxChart.update('none');
+                }
+                // 重置 B 和 H 图表
+                if (typeof updateBAndHChartsFromFluxSelection !== 'undefined') {
+                    updateBAndHChartsFromFluxSelection();
+                }
+                // 重置 Loss 图表
+                if (typeof materials !== 'undefined' && typeof conditions !== 'undefined' && typeof selectedMaterialIds !== 'undefined') {
+                    const lossData = calculateLosses(materials, conditions.frequency, conditions.dcVoltage, selectedMaterialIds);
+                    if (typeof updateLossChart !== 'undefined') {
+                        updateLossChart(lossData);
+                    }
+                }
+            }
+        }
+        
+        // Flag to prevent infinite sync loops
+        let isSyncingCharts = false;
+        
+        // Function to sync x-axis from voltage chart to flux chart
+        function syncXAxisToFluxChart(sourceChart) {
+            if (!fluxChart || !sourceChart) return;
+            const sourceXScale = sourceChart.scales.x;
+            const targetXScale = fluxChart.scales.x;
+            
+            if (sourceXScale && targetXScale) {
+                const min = sourceXScale.min;
+                const max = sourceXScale.max;
+                targetXScale.options.min = min;
+                targetXScale.options.max = max;
+                fluxChart.update('none');
+            }
+        }
+        
+        // Function to sync x-axis from flux chart to voltage chart
+        function syncXAxisToVoltageChart(sourceChart) {
+            if (!voltageChart || !sourceChart) return;
+            const sourceXScale = sourceChart.scales.x;
+            const targetXScale = voltageChart.scales.x;
+            
+            if (sourceXScale && targetXScale) {
+                const min = sourceXScale.min;
+                const max = sourceXScale.max;
+                targetXScale.options.min = min;
+                targetXScale.options.max = max;
+                voltageChart.update('none');
+            }
+        }
+
+        function updateFluxChart(data) {
+            // Store original flux_L data for console output
+            originalFluxData = data.flux_L;
+            // Store original time data for calculating real time period
+            originalTimeData = data.time;
+            
+            const chartData = data.time.map((t, i) => ({
+                time: (t * 1000).toFixed(2),
+                v_L: data.v_L[i],
+                flux: data.flux_L[i] * 1000
+            }));
+
+            const container = document.getElementById('flux-chart');
+            container.innerHTML = '<canvas id="flux-canvas"></canvas>';
+            const canvas = document.getElementById('flux-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (fluxChart) fluxChart.destroy();
+            
+            // Selection state
+            let isSelecting = false;
+            let startX = null;
+            let currentX = null;
+            
+            // Custom plugin for drawing selection area
+            const dataLength = chartData.length;
+            const selectionPlugin = {
+                id: 'selectionPlugin',
+                afterDraw: (chart) => {
+                    const chartArea = chart.chartArea;
+                    
+                    // Draw persistent selection (if exists)
+                    if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null && dataLength > 0) {
+                        // Ensure indices are within valid range
+                        const validStartIndex = Math.max(0, Math.min(fluxSelectionStartIndex, dataLength - 1));
+                        const validEndIndex = Math.max(0, Math.min(fluxSelectionEndIndex, dataLength - 1));
+                        
+                        // Use scale's getPixelForValue to get correct pixel positions considering zoom
+                        const xScale = chart.scales.x;
+                        const startXPos = xScale.getPixelForValue(validStartIndex);
+                        const endXPos = xScale.getPixelForValue(validEndIndex);
+                        const minX = Math.min(startXPos, endXPos);
+                        const maxX = Math.max(startXPos, endXPos);
+                        
+                        ctx.save();
+                        // Persistent selection: orange color
+                        ctx.fillStyle = 'rgba(245, 158, 11, 0.15)'; // Orange with low opacity
+                        ctx.fillRect(
+                            minX,
+                            chartArea.top,
+                            maxX - minX,
+                            chartArea.bottom - chartArea.top
+                        );
+                        ctx.strokeStyle = '#f59e0b'; // Orange border
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([5, 5]);
+                        ctx.strokeRect(
+                            minX,
+                            chartArea.top,
+                            maxX - minX,
+                            chartArea.bottom - chartArea.top
+                        );
+                        ctx.restore();
+                    }
+                    
+                    // Draw temporary selection while dragging (blue)
+                    if (isSelecting && startX !== null && currentX !== null) {
+                        const minX = Math.min(startX, currentX);
+                        const maxX = Math.max(startX, currentX);
+                        
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // Blue with opacity
+                        ctx.fillRect(
+                            minX,
+                            chartArea.top,
+                            maxX - minX,
+                            chartArea.bottom - chartArea.top
+                        );
+                        ctx.strokeStyle = '#3b82f6'; // Blue border
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([5, 5]);
+                        ctx.strokeRect(
+                            minX,
+                            chartArea.top,
+                            maxX - minX,
+                            chartArea.bottom - chartArea.top
+                        );
+                        ctx.restore();
+                    }
+                }
+            };
+            
+            fluxChart = new Chart(ctx, {
+                type: 'line',
+                plugins: [selectionPlugin],
+                data: {
+                    labels: chartData.map(d => d.time),
+                    datasets: [
+                        {
+                            label: 'V_L (V)',
+                            data: chartData.map(d => d.v_L),
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y',
+                            order: 2
+                        },
+                        {
+                            label: 'Flux (mWb)',
+                            data: chartData.map(d => d.flux),
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y1',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.parsed.y;
+                                    const unit = context.dataset.label.includes('Flux') ? ' mWb' : ' V';
+                                    return `${context.dataset.label}: ${value.toFixed(2)}${unit}`;
+                                }
+                            }
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                                onZoom: ({ chart }) => {
+                                    if (!isSyncingCharts && voltageChart) {
+                                        isSyncingCharts = true;
+                                        syncXAxisToVoltageChart(chart);
+                                        resetFluxSelection();
+                                        isSyncingCharts = false;
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                onPan: ({ chart }) => {
+                                    if (!isSyncingCharts && voltageChart) {
+                                        isSyncingCharts = true;
+                                        syncXAxisToVoltageChart(chart);
+                                        resetFluxSelection();
+                                        isSyncingCharts = false;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time (ms)', font: { size: 10 } },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'V_L (V)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Flux (mWb)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+            
+            // Mouse event handlers for selection
+            const getEventPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                return e.clientX - rect.left;
+            };
+            
+            const getDataIndex = (xPos) => {
+                const chartArea = fluxChart.chartArea;
+                const xScale = fluxChart.scales.x;
+                
+                // Ensure xPos is within chart area
+                const clampedX = Math.max(chartArea.left, Math.min(xPos, chartArea.right));
+                
+                // Get the value at this pixel position considering zoom
+                // This automatically handles zoom state
+                const value = xScale.getValueForPixel(clampedX);
+                
+                // Convert value to index based on scale type
+                let index;
+                if (xScale.type === 'category' || !xScale.type) {
+                    // For category scale (default when using labels), value is the index
+                    index = Math.round(value);
+                } else {
+                    // For linear scale, calculate index based on visible range
+                    // Get the visible min/max indices (considering zoom)
+                    const minPixel = chartArea.left;
+                    const maxPixel = chartArea.right;
+                    const minValue = xScale.getValueForPixel(minPixel);
+                    const maxValue = xScale.getValueForPixel(maxPixel);
+                    
+                    // Calculate relative position within visible range
+                    const range = maxValue - minValue;
+                    if (range > 0) {
+                        const relativePos = (value - minValue) / range;
+                        // Map to data indices
+                        const minIndex = Math.max(0, Math.round(minValue));
+                        const maxIndex = Math.min(chartData.length - 1, Math.round(maxValue));
+                        const indexRange = maxIndex - minIndex;
+                        index = minIndex + Math.round(relativePos * indexRange);
+                    } else {
+                        index = Math.round(value);
+                    }
+                }
+                
+                // Clamp to valid range
+                index = Math.max(0, Math.min(index, chartData.length - 1));
+                
+                return index;
+            };
+            
+            // 用于区分选择和平移的变量
+            let mouseDownTime = null;
+            let mouseDownPos = null;
+            
+            // 清除 flux selection 的函数 (use global resetFluxSelection instead)
+            function clearFluxSelection() {
+                resetFluxSelection();
+            }
+            
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Left mouse button
+                    mouseDownTime = Date.now();
+                    mouseDownPos = getEventPos(e);
+                    // 如果按住 Ctrl 或 Shift，则允许平移，清除选择
+                    if (e.ctrlKey || e.shiftKey) {
+                        clearFluxSelection();
+                        return;
+                    }
+                    isSelecting = true;
+                    startX = mouseDownPos;
+                    currentX = startX;
+                    canvas.style.cursor = 'crosshair';
+                }
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (isSelecting) {
+                    currentX = getEventPos(e);
+                    fluxChart.update('none');
+                } else if (mouseDownTime !== null && mouseDownPos !== null) {
+                    // 检测是否是平移操作（鼠标移动距离较大）
+                    const currentPos = getEventPos(e);
+                    const moveDistance = Math.abs(currentPos - mouseDownPos);
+                    const timeElapsed = Date.now() - mouseDownTime;
+                    // 如果移动距离超过 10 像素且时间很短，可能是平移操作
+                    if (moveDistance > 10 && timeElapsed < 200) {
+                        clearFluxSelection();
+                        mouseDownTime = null;
+                        mouseDownPos = null;
+                    }
+                }
+            });
+            
+            canvas.addEventListener('mouseup', (e) => {
+                mouseDownTime = null;
+                mouseDownPos = null;
+                
+                if (isSelecting && e.button === 0) {
+                    isSelecting = false;
+                    canvas.style.cursor = 'default';
+                    
+                    if (startX !== null && currentX !== null && originalFluxData) {
+                        const startIndex = getDataIndex(Math.min(startX, currentX));
+                        const endIndex = getDataIndex(Math.max(startX, currentX));
+                        
+                        // Save selected indices
+                        fluxSelectionStartIndex = startIndex;
+                        fluxSelectionEndIndex = endIndex;
+                        
+                        const fluxValues = originalFluxData.slice(startIndex, endIndex + 1);
+                        
+                        console.log('Flux start index:', startIndex);
+                        console.log('Flux end index:', endIndex);
+                        console.log('Flux values from start to end:', fluxValues);
+
+                        // 将 fluxValues 转换成真实的 B 值并更新 B chart
+                        // 获取所有激活的材料
+                        const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+                        
+                        if (activeMaterials.length > 0 && fluxValues.length > 0) {
+                            // 为每个激活的材料计算 B 值
+                            const allBData = [];
+                            
+                            activeMaterials.forEach(activeMaterial => {
+                                // 公式：B = flux / Ae / N
+                                // flux: 韦伯 (originalFluxData 中的值已经是韦伯单位)
+                                // Ae: 平方厘米 → 平方米 (除以 10000)
+                                // 结果单位：T (特斯拉)
+                                
+                                const Ae_m2 = activeMaterial.ae / 10000; // 平方厘米转平方米
+                                const N = activeMaterial.turns;
+                                
+                                // 计算每个 flux 值对应的 B 值
+                                const bData = fluxValues.map((flux_Wb, index) => {
+                                    // flux_Wb 已经是韦伯单位，不需要转换
+                                    const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
+                                    
+                                    return {
+                                        time: startIndex + index,
+                                        B: B_T * 1000 // 转换为毫特斯拉用于数据格式兼容
+                                    };
+                                });
+                                
+                                console.log(`B values for ${activeMaterial.name}:`, bData.map(d => (d.B / 1000).toFixed(4) + ' T'));
+                                
+                                allBData.push({ material: activeMaterial, data: bData });
+                            });
+                            
+                            // 更新 B chart，显示所有激活的材料
+                            updateBChart(allBData);
+                            
+                            // 发送预测请求
+                            requestPredictions();
+                        }
+                        
+                        // Clear temporary selection
+                        startX = null;
+                        currentX = null;
+                        // Update chart to show persistent selection
+                        fluxChart.update('none');
+                    }
+                }
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                mouseDownTime = null;
+                mouseDownPos = null;
+                if (isSelecting) {
+                    isSelecting = false;
+                    canvas.style.cursor = 'default';
+                    startX = null;
+                    currentX = null;
+                    fluxChart.update('none');
+                }
+            });
+            
+            // 监听缩放事件，缩放时清除 flux selection
+            // 使用 wheel 事件监听鼠标滚轮缩放
+            let wheelTimeout = null;
+            canvas.addEventListener('wheel', () => {
+                // 防抖处理，避免频繁触发
+                clearTimeout(wheelTimeout);
+                wheelTimeout = setTimeout(() => {
+                    if (!isSyncingCharts) {
+                        resetFluxSelection();
+                    }
+                }, 100);
+            }, { passive: true });
+            
+            // 监听触摸缩放事件（pinch）
+            let touchStartDistance = null;
+            let pinchTimeout = null;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    touchStartDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                }
+            }, { passive: true });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && touchStartDistance !== null) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const currentDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    // 如果距离变化超过阈值，说明正在缩放
+                    if (Math.abs(currentDistance - touchStartDistance) > 10) {
+                        clearTimeout(pinchTimeout);
+                        pinchTimeout = setTimeout(() => {
+                            if (!isSyncingCharts) {
+                                resetFluxSelection();
+                            }
+                        }, 100);
+                        touchStartDistance = currentDistance;
+                    }
+                }
+            }, { passive: true });
+            
+            canvas.addEventListener('touchend', () => {
+                touchStartDistance = null;
+            }, { passive: true });
+        }
+
+        function updateLossChart(data) {
+            const container = document.getElementById('loss-chart');
+            container.innerHTML = '<canvas id="loss-canvas"></canvas>';
+            const ctx = document.getElementById('loss-canvas').getContext('2d');
+            
+            if (lossChart) lossChart.destroy();
+            lossChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        label: 'Loss (W/m³)',
+                        data: data.map(d => Math.abs(d.loss)), // 确保loss是正数
+                        backgroundColor: data.map(d => activeMatIds.includes(d.id) ? d.color : d.color + '80'),
+                        borderColor: data.map(d => activeMatIds.includes(d.id) ? '#1e293b' : 'transparent'),
+                        borderWidth: data.map(d => activeMatIds.includes(d.id) ? 2 : 0)
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => {
+                                    const index = context.dataIndex;
+                                    const lossPerVol = Math.abs(data[index].loss);
+                                    const lossTotal = Math.abs(data[index].loss_total || 0);
+                                    return [
+                                        `Loss per volume: ${lossPerVol.toFixed(2)} W/m³`,
+                                        `Total loss: ${lossTotal.toFixed(2)} W`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Loss (W/m³)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } }
+                        },
+                        y: {
+                            ticks: { 
+                                font: { size: 12 },
+                                callback: function(value, index) {
+                                    const material = data[index];
+                                    if (material && material.loss_total !== undefined) {
+                                        return `${material.name} (${material.loss_total.toFixed(2)} W)`;
+                                    }
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBChart(materialsData) {
+            const container = document.getElementById('b-chart');
+            container.innerHTML = '<canvas id="b-canvas"></canvas>';
+            const ctx = document.getElementById('b-canvas').getContext('2d');
+            
+            if (bChart) bChart.destroy();
+            
+            // 如果传入的是单个材料数据（兼容旧代码），转换为数组格式
+            let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
+            
+            // 获取第一个数据集的长度用于 labels
+            const firstData = dataArray[0]?.data || [];
+            const labels = firstData.map((d, i) => i);
+            
+            // 为每个材料创建数据集
+            const datasets = dataArray.map(({ material, data }) => ({
+                label: material.name,
+                data: data.map(d => d.B / 1000), // 转换为特斯拉（T）
+                borderColor: material.color,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                pointRadius: 0
+            }));
+            
+            bChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(4)} T`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            display: true,
+                            title: { display: true, text: 'Index', font: { size: 10 } },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            title: { display: true, text: 'B (T)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateHChart(materialsData) {
+            const container = document.getElementById('h-chart');
+            container.innerHTML = '<canvas id="h-canvas"></canvas>';
+            const ctx = document.getElementById('h-canvas').getContext('2d');
+            
+            if (hChart) hChart.destroy();
+            
+            // 如果传入的是单个材料数据（兼容旧代码），转换为数组格式
+            let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
+            
+            // 获取第一个数据集的长度用于 labels
+            const firstData = dataArray[0]?.data || [];
+            const labels = firstData.map((d, i) => i);
+            
+            // 为每个材料创建数据集
+            const datasets = dataArray.map(({ material, data }) => ({
+                label: material.name,
+                data: data.map(d => d.H),
+                borderColor: material.color,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                pointRadius: 0
+            }));
+            
+            hChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} A/m`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            display: true,
+                            title: { display: true, text: 'Index', font: { size: 10 } },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            title: { display: true, text: 'H (A/m)', font: { size: 10 } },
+                            ticks: { font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initSliders();
+            initTopology();
+            initPresets();
+            initMaterials();
+            updateCharts();
+        });
+    </script>
+</body>
+</html>

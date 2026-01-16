@@ -1,0 +1,762 @@
+<!--
+    User Documentation Page
+    
+    This page provides comprehensive documentation for the AI Magnetic Design platform.
+    Features include:
+    - Searchable documentation
+    - Table of contents navigation
+    - Multiple documentation sections
+    - Code examples and usage instructions
+    
+    Dependencies:
+    - Tailwind CSS for styling
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Manual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Chart line transition styles */
+        .chart-line {
+            transition: all 0.3s ease;
+        }
+        /* Code block styling */
+        pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Document section content area scrolling */
+        .doc-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 100%;
+        }
+        .doc-section > div:last-child {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="h-screen overflow-hidden bg-gray-50 p-[13px]">
+        <div class="grid grid-cols-12 gap-[13px] h-full">
+            <!-- Left Panel - Table of Contents -->
+            <section class="col-span-3 flex flex-col gap-[13px] overflow-y-auto">
+                <!-- Search -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                        <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Search Documentation
+                        </h2>
+                    </div>
+                    <div class="p-[13px]">
+                        <input type="text" id="search-input" placeholder="Search..." class="w-full px-[9px] py-[7px] bg-white border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    </div>
+                </div>
+
+                <!-- Table of Contents -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-grow">
+                    <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                        <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                            Table of Contents
+                        </h2>
+                    </div>
+                    <nav class="p-[9px]">
+                        <ul id="toc-list" class="space-y-[5px] text-base">
+                            <li><a href="#getting-started" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer active" data-section="getting-started">Getting Started</a></li>
+                            <li><a href="#design-center" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="design-center">Design Center</a></li>
+                            <li><a href="#simulation" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="simulation">Grid-Connected DC-AC Simulation</a></li>
+                            <li><a href="#model-libraries" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="model-libraries">Model Libraries</a></li>
+                            <li><a href="#parameters" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="parameters">Parameters & Settings</a></li>
+                            <li><a href="#training" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="training">Model Training</a></li>
+                            <li><a href="#export" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="export">Export & Integration</a></li>
+                            <li><a href="#troubleshooting" class="toc-item block px-[9px] py-[7px] rounded text-gray-700 hover:bg-gray-100 cursor-pointer" data-section="troubleshooting">Troubleshooting</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </section>
+
+            <!-- Middle Panel - Main Content -->
+            <section class="col-span-6 flex flex-col gap-[13px] overflow-hidden">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-grow flex flex-col">
+                    <!-- Getting Started -->
+                    <section id="getting-started" class="doc-section">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Getting Started
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Welcome to AI Magnetic Design</h3>
+                                <p class="mb-[9px]">AI Magnetic Design is a comprehensive platform for designing and optimizing magnetic components, particularly DC-AC converters. This system combines advanced neural network models with intuitive design tools to help engineers create efficient magnetic components.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Key Features</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Interactive design center with real-time parameter adjustment</li>
+                                    <li>Pre-trained neural network models for various magnetic materials</li>
+                                    <li>Custom model training and fine-tuning capabilities</li>
+                                    <li>Comprehensive visualization of magnetic properties</li>
+                                    <li>Export models in multiple formats (.h5, .json, .pdf)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">System Requirements</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Modern web browser (Chrome, Firefox, Safari, Edge)</li>
+                                    <li>JavaScript enabled</li>
+                                    <li>Internet connection for initial load</li>
+                                    <li>Recommended: 1920x1080 or higher resolution</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Design Center -->
+                    <section id="design-center" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                </svg>
+                                Design Center
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Overview</h3>
+                                <p class="mb-[9px]">The Design Center is the main workspace for designing magnetic components. It provides interactive controls for adjusting core parameters and visualizing the resulting magnetic behavior.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Core Parameters</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>R (Outer Radius):</strong> The outer radius of the toroidal core, measured in mm</li>
+                                    <li><strong>r (Inner Radius):</strong> The inner radius of the toroidal core, measured in mm</li>
+                                    <li><strong>d (Height/Thickness):</strong> The height or thickness of the toroidal core, measured in mm</li>
+                                    <li><strong>N (Number of Turns):</strong> The number of wire turns in the winding</li>
+                                    <li><strong>Effective Cross-Sectional Area (Ae):</strong> Automatically calculated as Ae = (R - r) × d, displayed in cm²</li>
+                                    <li><strong>Effective Magnetic Path Length (Le):</strong> Automatically calculated as Le = π × (R + r), displayed in mm</li>
+                                    <li><strong>Inductance (L):</strong> For materials 3C90, 3C94, 3E6, and 3F4, the inductance is automatically calculated based on the core geometry and relative permeability (μᵣ), displayed in mH</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Visualization Tools</h4>
+                                <p class="mb-[5px].5">The Design Center provides several real-time visualization charts:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Grid & Inverter Voltage:</strong> Dual-axis chart showing grid voltage (left Y-axis) and inverter voltage (right Y-axis) over time</li>
+                                    <li><strong>Inductor Voltage & Flux Linkage:</strong> Dual-axis chart showing inductor voltage V_L (left Y-axis) and flux linkage (right Y-axis). You can select a region by clicking and dragging to trigger AI predictions</li>
+                                    <li><strong>Core Loss Comparison:</strong> Bar chart comparing core loss across different materials. Click bars to view B-H curves</li>
+                                    <li><strong>Magnetic Flux Density (B):</strong> Displays the magnetic flux density characteristics for selected materials</li>
+                                    <li><strong>Field Strength (H):</strong> Shows the magnetic field strength, updated based on AI predictions when a flux region is selected</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Chart Synchronization & Interaction</h4>
+                                <p class="mb-[5px].5">The Grid & Inverter Voltage chart and Inductor Voltage & Flux Linkage chart are synchronized for better analysis:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Synchronized Zoom:</strong> When you zoom (mouse wheel) on either chart, both charts zoom together, keeping their x-axes aligned. This ensures consistent time scales across both visualizations.</li>
+                                    <li><strong>Synchronized Pan:</strong> When you pan (drag) either chart horizontally, both charts pan together, maintaining synchronized time ranges.</li>
+                                    <li><strong>Draggable Handle:</strong> On the Grid & Inverter Voltage chart, a blue draggable handle appears when you hover over the chart. You can drag this handle left or right to pan the view, and both charts will update simultaneously.</li>
+                                    <li><strong>Flux Selection Reset:</strong> When you zoom, pan, or drag on either chart, any previously selected flux region will be automatically reset. This ensures that flux selections remain valid for the current view.</li>
+                                </ul>
+                                <p class="mb-[5px].5 mt-[9px]"><strong>Note:</strong> The flux selection bounding box resets automatically when:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Zooming on either chart (mouse wheel or pinch gesture)</li>
+                                    <li>Panning either chart (drag or keyboard)</li>
+                                    <li>Dragging the handle on the voltage chart</li>
+                                    <li>Changing operating conditions or parameters</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Operating Conditions</h4>
+                                <p class="mb-[5px].5">Configure inverter and grid parameters:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Topology:</strong> Select DC-AC converter topology (Single-Phase Full Bridge, 3Phase Full Bridge, or 3Phase T-Type Three-Level)</li>
+                                    <li><strong>DC Voltage:</strong> Input DC voltage (200-800V)</li>
+                                    <li><strong>Frequency:</strong> Switching frequency (5-100kHz)</li>
+                                    <li><strong>Filter Parameters:</strong> Filter inductance (L) and capacitance (C)</li>
+                                    <li><strong>Grid Parameters:</strong> Grid voltage, frequency, power, and impedance</li>
+                                    <li><strong>Harmonics:</strong> Inject 3rd, 5th, and 7th harmonic components</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Using the Design Center</h4>
+                                <ol class="list-decimal list-inside space-y-[5px] ml-[9px]">
+                                    <li>Configure operating conditions (topology, voltages, frequencies)</li>
+                                    <li>Select and configure materials from the Material & Core Design panel</li>
+                                    <li>Adjust core parameters (R, r, d, N) for each material. Ae, Le, and L (for first four materials) are automatically calculated</li>
+                                    <li>Observe real-time updates in the visualization charts</li>
+                                    <li>Select a region in the Flux chart to trigger AI predictions for B-H curves</li>
+                                    <li>Compare core losses across different materials</li>
+                                    <li>Fine-tune parameters to achieve desired performance</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Grid-Connected DC-AC Simulation -->
+                    <section id="simulation" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                Grid-Connected DC-AC Inverter Simulation
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Overview</h3>
+                                <p class="mb-[9px]">The Design Center includes a comprehensive time-domain simulation model for grid-connected inverters. This simulation captures the dynamic behavior of voltage, current, and inductor flux under PWM operation. The simulation is intended for educational demonstration, algorithm prototyping, and qualitative performance evaluation, rather than device-level design.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">System Architecture</h4>
+                                <p class="mb-[5px].5">The simulated system consists of:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Ideal DC voltage source</li>
+                                    <li>PWM-controlled inverter bridge</li>
+                                    <li>Grid-side filter inductor (L)</li>
+                                    <li>Equivalent grid voltage source with optional harmonic distortion</li>
+                                    <li>Power-based closed-loop modulation control with PI controller</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Supported Topologies</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Single-Phase Full Bridge:</strong> Two-level PWM inverter for single-phase grid connection</li>
+                                    <li><strong>3Phase Full Bridge:</strong> Three-phase two-level PWM inverter</li>
+                                    <li><strong>3Phase T-Type Three-Level:</strong> Three-phase three-level T-type inverter with Phase Disposition (PD) PWM</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Grid Voltage and Harmonic Modeling</h4>
+                                <p class="mb-[5px].5">The grid voltage is modeled as a sinusoidal source:</p>
+                                <p class="mb-[5px].5 ml-[9px]"><em>v<sub>g</sub>(t) = V̂ · sin(ωt + φ)</em></p>
+                                <p class="mb-[5px].5">For three-phase systems, a fixed 120° phase displacement is applied. To emulate non-ideal grid conditions, the model allows injection of <strong>3rd, 5th, and 7th harmonic components</strong>, specified as a percentage of the fundamental magnitude. Random initial phase angles are assigned to each harmonic to avoid artificial symmetry.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">PWM and Inverter Output Modeling</h4>
+                                <p class="mb-[5px].5">The inverter employs <strong>Sinusoidal PWM (SPWM)</strong>:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>The modulation reference is synchronized with the grid frequency</li>
+                                    <li>A symmetric triangular carrier is used</li>
+                                    <li>Both two-level and three-level (PD-PWM) strategies are supported</li>
+                                </ul>
+                                <p class="mb-[5px].5 mt-[9px]">For three-phase three-wire systems, <strong>common-mode voltage is explicitly accounted for</strong>, ensuring realistic phase voltage representation. Output voltage levels are automatically scaled according to the selected topology and DC-link voltage.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Power Control and Modulation Adjustment</h4>
+                                <p class="mb-[5px].5">A <strong>power-based PI controller</strong> adjusts the modulation index to regulate the delivered active power. The control law can be expressed as:</p>
+                                <p class="mb-[5px].5 ml-[9px]"><em>Δm = K<sub>p</sub>(P* − P) + K<sub>i</sub>∫(P* − P)dt</em></p>
+                                <p class="mb-[5px].5">where <em>P*</em> is the power reference and <em>P</em> is the instantaneous calculated power.</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Kp (Proportional Gain):</strong> Default value 0.00004, adjustable via slider in the Operating Conditions panel</li>
+                                    <li><strong>Ki (Integral Gain):</strong> Default value 0.8, adjustable via slider in the Operating Conditions panel</li>
+                                    <li>Power reference (P*) and actual power (P) are continuously monitored</li>
+                                    <li>This approach enables qualitative assessment of power tracking dynamics under different grid and filter conditions</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Inductor Current and Flux Computation</h4>
+                                <p class="mb-[5px].5">The filter inductor dynamics follow:</p>
+                                <p class="mb-[5px].5 ml-[9px]"><em>v<sub>L</sub> = v<sub>inv</sub> − v<sub>g</sub> − i·R</em></p>
+                                <p class="mb-[5px].5">Inductor current is updated discretely as:</p>
+                                <p class="mb-[5px].5 ml-[9px]"><em>i(t+Δt) = i(t) + (v<sub>L</sub>/L)·Δt</em></p>
+                                <p class="mb-[5px].5">In addition, the inductor magnetic flux is obtained by integrating the inductor voltage:</p>
+                                <p class="mb-[5px].5 ml-[9px]"><em>ψ(t+Δt) = ψ(t) + v<sub>L</sub>·Δt</em></p>
+                                <p class="mb-[5px].5 mt-[9px]">This allows visualization and analysis of <strong>flux accumulation and low-frequency drift phenomena</strong>, which are relevant for studying DC bias effects and control robustness.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Numerical Simulation and Data Output</h4>
+                                <p class="mb-[5px].5">The simulation runs over multiple grid cycles with a time step determined by the switching frequency and carrier resolution. To balance accuracy and performance, results are stored using down-sampling.</p>
+                                <p class="mb-[5px].5 mt-[9px]">The following waveforms are available as outputs:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Grid voltage (v_grid)</li>
+                                    <li>Inverter output voltage (v_inv)</li>
+                                    <li>Inductor voltage (v_L)</li>
+                                    <li>Inductor current (i_L)</li>
+                                    <li>Inductor magnetic flux (flux_L)</li>
+                                    <li>Normalized PWM signal</li>
+                                </ul>
+                                <p class="mb-[5px].5 mt-[9px]">These outputs can be used for waveform visualization, harmonic analysis, and comparative studies across different configurations.</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Model Assumptions</h4>
+                                <p class="mb-[5px].5">The following assumptions are adopted:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Passive components are linear and time-invariant</li>
+                                    <li>Power semiconductor devices are ideal (no switching loss or dead-time effects)</li>
+                                    <li>Grid frequency is constant</li>
+                                    <li>Grid voltage harmonics (3rd, 5th, and 7th order) can be optionally superimposed</li>
+                                    <li>State updates are performed using an explicit Euler integration method</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Applicability and Limitations</h4>
+                                <p class="mb-[5px].5">This model is intended as a <strong>behavioral-level inverter simulation</strong>. It does not represent switching losses, thermal effects, or electromagnetic parasitics, and therefore should not be used for detailed hardware design.</p>
+                                <p class="mb-[5px].5 mt-[9px]">The modular structure allows future extensions, such as:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>LCL filter modeling</li>
+                                    <li>dq-frame control strategies</li>
+                                    <li>Inner current control loops</li>
+                                    <li>Non-ideal switching and dead-time effects</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Model Libraries -->
+                    <section id="model-libraries" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                Model Libraries
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Pre-trained Models</h3>
+                                <p class="mb-[9px]">The Model Libraries section provides access to pre-trained neural network models for various magnetic materials. These models have been trained on extensive datasets and are ready for immediate use.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Available Material Models</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>3C90:</strong> High-frequency ferrite material, suitable for switching power supplies</li>
+                                    <li><strong>3C94:</strong> Advanced soft magnetic material with low core loss</li>
+                                    <li><strong>3E6:</strong> Non-crystalline magnetic material with excellent high-frequency properties</li>
+                                    <li><strong>3F4:</strong> Composite material with distributed air gaps</li>
+                                    <li><strong>Custom Model:</strong> User-trained models for specific applications</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Model Information</h4>
+                                <p class="mb-[5px].5">Each model displays key information:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Number of parameters (~6K typical)</li>
+                                    <li>LSTM hidden size: 40</li>
+                                    <li>MLP hidden size: 16</li>
+                                    <li>Training dataset size</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Selecting a Model</h4>
+                                <ol class="list-decimal list-inside space-y-[5px] ml-[9px]">
+                                    <li>Navigate to the Model Libraries section</li>
+                                    <li>Review available models and their specifications</li>
+                                    <li>Select the model that best fits your application</li>
+                                    <li>The selected model will be loaded into the Design Center</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Parameters & Settings -->
+                    <section id="parameters" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Parameters & Settings
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Parameter Ranges</h3>
+                                <p class="mb-[9px]">Understanding the valid parameter ranges is crucial for accurate design. Each parameter has specific limits based on physical constraints and model training data.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Core Parameters</h4>
+                                <div class="bg-gray-50 rounded-lg p-[13px] border border-gray-200">
+                                    <table class="w-full text-xs">
+                                        <thead>
+                                            <tr class="border-b border-gray-300">
+                                                <th class="text-left py-[5px] font-semibold">Parameter</th>
+                                                <th class="text-left py-[5px] font-semibold">Range</th>
+                                                <th class="text-left py-[5px] font-semibold">Unit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="space-y-[5px]">
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">R</td>
+                                                <td class="py-[5px]">10 - 100</td>
+                                                <td class="py-[5px]">mm</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">r</td>
+                                                <td class="py-[5px]">5 - 80</td>
+                                                <td class="py-[5px]">mm</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">d</td>
+                                                <td class="py-[5px]">5 - 50</td>
+                                                <td class="py-[5px]">mm</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">N</td>
+                                                <td class="py-[5px]">5 - 50</td>
+                                                <td class="py-[5px]">turns</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">Ae (calculated)</td>
+                                                <td class="py-[5px]">-</td>
+                                                <td class="py-[5px]">cm²</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-[5px]">Le (calculated)</td>
+                                                <td class="py-[5px]">-</td>
+                                                <td class="py-[5px]">mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-[5px]">L (calculated, materials 1-4)</td>
+                                                <td class="py-[5px]">-</td>
+                                                <td class="py-[5px]">mH</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Model Settings</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Material Selection:</strong> Choose from available pre-trained models</li>
+                                    <li><strong>Temperature:</strong> Operating temperature affects material properties</li>
+                                    <li><strong>Frequency:</strong> Operating frequency for AC applications</li>
+                                    <li><strong>Excitation:</strong> Input voltage or current waveform</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Model Training -->
+                    <section id="training" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                Model Training
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Training Custom Models</h3>
+                                <p class="mb-[9px]">The Model Training section allows you to fine-tune existing models or train new models using your own datasets. This is useful for specialized applications or materials not covered by pre-trained models.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Training Process</h4>
+                                <ol class="list-decimal list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Prepare Dataset:</strong> Create a ZIP file containing three CSV files: H.csv, T.csv, and B.csv</li>
+                                    <li><strong>Upload Data:</strong> Use the file upload interface to upload your ZIP file. The system will validate the data format and dimensions</li>
+                                    <li><strong>Select Base Model:</strong> Choose a pre-trained model (A-E) as starting point</li>
+                                    <li><strong>Configure Hyperparameters:</strong> Set epochs, learning rate, batch size, window stride, loss function, and frozen layers</li>
+                                    <li><strong>Start Training:</strong> Training runs asynchronously. Monitor progress through real-time metrics and charts</li>
+                                    <li><strong>Validate Results:</strong> Review loss curves, RMSE, and Energy Loss metrics for both training and validation sets</li>
+                                    <li><strong>Export Model:</strong> Download trained weights and training report PDF</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Dataset Format</h4>
+                                <p class="mb-[5px].5">Your dataset must be a ZIP file containing exactly three CSV files:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px] mb-[9px]">
+                                    <li><strong>H.csv:</strong> Magnetic field strength data, shape (N, M) where N is number of samples, M is time series length</li>
+                                    <li><strong>B.csv:</strong> Magnetic flux density data, shape (N, M) matching H.csv</li>
+                                    <li><strong>T.csv:</strong> Temperature data, shape (N, 1) where N matches H and B</li>
+                                </ul>
+                                <p class="mb-[5px].5">All three files must have the same number of samples (N). Data is loaded using comma-separated values.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Hyperparameters</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Epochs:</strong> Number of complete passes through the dataset (10-1000)</li>
+                                    <li><strong>Learning Rate:</strong> Step size for weight updates (0.0001-0.1)</li>
+                                    <li><strong>Batch Size:</strong> Number of samples per training step (8-128)</li>
+                                    <li><strong>Validation Split:</strong> Fraction of data used for validation (0.1-0.4)</li>
+                                    <li><strong>Window Stride:</strong> Sliding step size for window creation. Window size is fixed at 1000 points (1-1000)</li>
+                                    <li><strong>Loss Function:</strong> Choose from MSE, RMSE, or Energy Loss</li>
+                                    <li><strong>Frozen Layers:</strong> Number of initial layers to freeze during fine-tuning (0-3)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Training Metrics</h4>
+                                <p class="mb-[5px].5">During training, you can monitor:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Training/Validation Loss:</strong> Real-time loss curves with blue (training) and green (validation) lines</li>
+                                    <li><strong>RMSE:</strong> Root Mean Square Error percentage for both training and validation sets</li>
+                                    <li><strong>Energy Loss:</strong> Energy density normalized error percentage for both training and validation sets</li>
+                                    <li><strong>Initial Model Comparison:</strong> Comparison metrics showing improvement over the base pre-trained model</li>
+                                    <li><strong>Training Time:</strong> Elapsed time and average time per epoch</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Export & Integration -->
+                    <section id="export" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export & Integration
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Export Options</h3>
+                                <p class="mb-[9px]">The platform supports multiple export formats to integrate models into your workflow.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Export Options</h4>
+                                <p class="mb-[5px].5">After training completes, you can download:</p>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li><strong>Model Weights (.sd):</strong> Trained model weights in PyTorch format, ready for inference</li>
+                                    <li><strong>Training Report (.pdf):</strong> Comprehensive PDF report containing:
+                                        <ul class="list-circle list-inside ml-[17px] mt-1 space-y-[5px]">
+                                            <li>Training and validation loss curves</li>
+                                            <li>RMSE progress charts</li>
+                                            <li>Energy Loss progress charts</li>
+                                            <li>Training summary with all hyperparameters and final metrics</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">File Retention</h4>
+                                <p class="mb-[5px].5">Uploaded data and training results are automatically retained for 15 days. A scheduled task runs daily at midnight to clean up files older than 15 days.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Troubleshooting -->
+                    <section id="troubleshooting" class="doc-section hidden">
+                        <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                Troubleshooting
+                            </h2>
+                        </div>
+                        <div class="p-[17px] space-y-[13px] text-base text-gray-700">
+                            <div>
+                                <h3 class="font-semibold text-base text-gray-800 mb-[9px]">Common Issues</h3>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Model Not Loading</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Check browser console for error messages</li>
+                                    <li>Verify model file format is correct</li>
+                                    <li>Ensure sufficient memory is available</li>
+                                    <li>Try refreshing the page</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Training Fails</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Verify dataset format matches requirements</li>
+                                    <li>Check for missing or invalid data points</li>
+                                    <li>Reduce batch size if memory errors occur</li>
+                                    <li>Lower learning rate if training diverges</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-[5px].5">Poor Prediction Accuracy</h4>
+                                <ul class="list-disc list-inside space-y-[5px] ml-[9px]">
+                                    <li>Ensure input parameters are within valid ranges</li>
+                                    <li>Check if selected model matches your material</li>
+                                    <li>Consider training a custom model with your data</li>
+                                    <li>Verify measurement data quality</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </section>
+
+            <!-- Right Panel - Quick Reference -->
+            <section class="col-span-3 flex flex-col gap-[13px] overflow-y-auto">
+                <!-- Quick Tips & Shortcuts -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-grow">
+                    <div class="bg-gray-100 px-[17px] py-[11px] border-b border-gray-200">
+                        <h2 class="text-gray-800 font-semibold text-base flex items-center gap-[7px]">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                            Quick Tips & Shortcuts
+                        </h2>
+                    </div>
+                    <div class="p-[13px] space-y-[13px] text-base text-gray-700">
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-[9px] rounded">
+                            <p class="font-semibold text-blue-800 mb-[5px]">Tip 1</p>
+                            <p class="text-blue-700 text-xs">Start with pre-trained models before training custom ones</p>
+                        </div>
+                        <div class="bg-green-50 border-l-4 border-green-400 p-[9px] rounded">
+                            <p class="font-semibold text-green-800 mb-[5px]">Tip 2</p>
+                            <p class="text-green-700 text-xs">Keep parameter values within recommended ranges for best results</p>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-[9px] rounded">
+                            <p class="font-semibold text-yellow-800 mb-[5px]">Tip 3</p>
+                            <p class="text-yellow-700 text-xs">Monitor loss curves during training to detect overfitting</p>
+                        </div>
+                        <div class="bg-purple-50 border-l-4 border-purple-400 p-[9px] rounded">
+                            <p class="font-semibold text-purple-800 mb-[5px]">Tip 4</p>
+                            <p class="text-purple-700 text-xs">Export models regularly to avoid losing training progress</p>
+                        </div>
+                        
+                        <!-- Keyboard Shortcuts Section -->
+                        <div class="border-t border-gray-200 pt-3 mt-[13px]">
+                            <h3 class="font-semibold text-gray-800 mb-[9px] flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                </svg>
+                                Keyboard Shortcuts
+                            </h3>
+                            <div class="space-y-[5px].5">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600">Search</span>
+                                    <kbd class="px-1.5 py-[5px] bg-gray-200 rounded text-xs">Ctrl + F</kbd>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Support Section -->
+                        <div class="border-t border-gray-200 pt-3 mt-[13px]">
+                            <h3 class="font-semibold text-gray-800 mb-[9px] flex items-center gap-[7px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                Support
+                            </h3>
+                            <p class="text-xs text-gray-600 mb-[9px]">For additional help or questions:</p>
+                            <ul class="space-y-[5px].5 ml-[9px]">
+                                <li class="flex items-start gap-[7px]">
+                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span class="text-xs">Email: support@magneticdesign.com</span>
+                                </li>
+                                <li class="flex items-start gap-[7px]">
+                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-xs">Documentation: docs.magneticdesign.com</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Table of contents navigation
+        const tocItems = document.querySelectorAll('.toc-item');
+        const docSections = document.querySelectorAll('.doc-section');
+
+        tocItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetSection = item.getAttribute('data-section');
+                
+                // Update active state
+                tocItems.forEach(i => i.classList.remove('active', 'bg-gray-100'));
+                item.classList.add('active', 'bg-gray-100');
+                
+                // Show target section
+                docSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                const target = document.getElementById(targetSection);
+                if (target) {
+                    target.classList.remove('hidden');
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length === 0) {
+                docSections.forEach(section => section.classList.add('hidden'));
+                document.getElementById('getting-started').classList.remove('hidden');
+                return;
+            }
+
+            docSections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+
+        // Initialize: show getting started section
+        document.getElementById('getting-started').classList.remove('hidden');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1097 @@
+<!--
+    Model Fine-tuning Page
+    
+    This page provides an interface for fine-tuning pre-trained magnetic component models.
+    Features include:
+    - Training data upload (ZIP file with H.csv, B.csv, T.csv)
+    - Hyperparameter configuration
+    - Real-time training progress monitoring
+    - Training metrics visualization (loss, RMSE, energy loss)
+    - Model weights and report download
+    
+    Dependencies:
+    - Tailwind CSS for styling
+    - Chart.js for training progress visualization
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Model Training</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Active menu item styling: dark background with white text */
+        .menu-item.active {
+            background-color: rgb(35, 35, 35) !important;
+            color: white !important;
+        }
+        .menu-item.active svg { color: white !important; }
+        
+        .menu-item { transition: all 0.3s ease; cursor: pointer; }
+        
+        /* Loading animation overlay */
+        #loader-overlay {
+            display: none;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid rgb(35, 35, 35);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Chart line transition styles */
+        .chart-line {
+            transition: all 0.3s ease;
+        }
+        
+        /* Large screen adaptation (>3000x>2000) */
+        @media (min-width: 3000px) and (min-height: 2000px) {
+            /* 设置三列最大高度 */
+            section.col-span-3,
+            section.col-span-5,
+            section.col-span-4 {
+                max-height: 1350px !important;
+                overflow-y: auto !important;
+            }
+            
+            /* 稍微增加字体大小 */
+            .text-xs {
+                font-size: 0.875rem !important;
+            }
+            
+            .text-\[10px\] {
+                font-size: 0.75rem !important;
+            }
+            
+            .text-\[9px\] {
+                font-size: 0.625rem !important;
+            }
+            
+            /* 增加Training Data区域高度 */
+            .training-data-section {
+                min-height: 220px !important;
+            }
+            
+            .training-data-section .p-3 {
+                padding: 1.25rem !important;
+            }
+            
+            .training-data-section .p-4 {
+                padding: 1.5rem !important;
+            }
+            
+            /* 增加Base Model区域高度 */
+            .base-model-section {
+                min-height: 200px !important;
+            }
+            
+            .base-model-section .p-3 {
+                padding: 1.25rem !important;
+            }
+            
+            .base-model-section .p-2 {
+                padding: 1rem !important;
+            }
+            
+            /* 大幅减少HyperParameters控件高度和间距 */
+            .hyperparameters-section {
+                flex-grow: 0 !important;
+                max-height: 500px !important;
+            }
+            
+            .hyperparameters-section .p-3 {
+                padding: 0.5rem !important;
+            }
+            
+            .hyperparameters-section input,
+            .hyperparameters-section select {
+                padding-top: 0.375rem !important;
+                padding-bottom: 0.375rem !important;
+                font-size: 0.75rem !important;
+                height: auto !important;
+            }
+            
+            .hyperparameters-section .space-y-2 > * + * {
+                margin-top: 0.375rem !important;
+            }
+            
+            .hyperparameters-section label {
+                margin-bottom: 0.125rem !important;
+            }
+            
+            .hyperparameters-section .text-\[10px\] {
+                font-size: 0.625rem !important;
+            }
+            
+            /* 减少Export Trained Model区域高度和内边距 */
+            .export-section {
+                min-height: auto !important;
+                max-height: 200px !important;
+            }
+            
+            .export-section .p-3 {
+                padding: 0.5rem !important;
+            }
+            
+            .export-section .space-y-2 > * + * {
+                margin-top: 0.5rem !important;
+            }
+            
+            .export-section button {
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+                font-size: 0.75rem !important;
+            }
+            
+            .export-section .text-\[10px\] {
+                font-size: 0.625rem !important;
+            }
+            
+            /* 减少Performance Metrics区域高度，但确保所有指标可见 */
+            .metrics-section {
+                flex-grow: 0 !important;
+                min-height: auto !important;
+                overflow-y: auto !important;
+            }
+            
+            .metrics-section > div:last-child {
+                overflow-y: auto !important;
+            }
+            
+            .metrics-section .p-3 {
+                padding: 0.5rem !important;
+            }
+            
+            .metrics-section .space-y-2 > * + * {
+                margin-top: 0.375rem !important;
+            }
+            
+            .metrics-section .p-2\.5 {
+                padding: 0.5rem !important;
+            }
+            
+            .metrics-section .text-lg {
+                font-size: 0.875rem !important;
+            }
+            
+            .metrics-section .text-\[10px\] {
+                font-size: 0.625rem !important;
+            }
+            
+            /* 增加图表高度 */
+            .chart-container {
+                height: 180px !important;
+            }
+            
+            /* 增加架构图高度 */
+            .architecture-svg {
+                height: 360px !important;
+            }
+            
+            /* 减少Training Progress区域高度，避免底部空白 */
+            .training-progress-section {
+                flex-grow: 0 !important;
+                min-height: auto !important;
+            }
+            
+            /* 确保中间列内容紧凑排列 */
+            section.col-span-5 {
+                justify-content: flex-start !important;
+            }
+            
+            /* 增加按钮高度 */
+            .py-2\.5 {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+            }
+            
+            /* 增加SVG图标大小 */
+            .w-3\.5, .h-3\.5 {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+            
+            .w-3, .h-3 {
+                width: 0.875rem !important;
+                height: 0.875rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="h-screen overflow-hidden bg-gray-50 p-3">
+        <div class="grid grid-cols-12 gap-3 h-full">
+                <!-- Left Panel - Data & Configuration -->
+                <section class="col-span-3 flex flex-col gap-3 overflow-y-auto">
+                    <!-- Data Upload -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden training-data-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                Training Data
+                            </h2>
+                        </div>
+
+                        <div class="p-3">
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer">
+                                <input type="file" accept=".zip" id="file-upload" class="hidden">
+                                <label for="file-upload" class="cursor-pointer">
+                                    <svg class="w-8 h-8 mx-auto text-gray-400 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <p class="text-xs font-medium text-gray-700 mb-1" id="file-name">Upload Dataset</p>
+                                    <div id="file-info" class="text-[10px] text-gray-500 space-y-0.5 hidden">
+                                        <p id="file-size"></p>
+                                        <p id="file-samples"></p>
+                                    </div>
+                                    <p id="file-hint" class="text-[10px] text-gray-500">ZIP format only, must contain H.csv, T.csv, B.csv</p>
+                                </label>
+                            </div>
+
+                            <div id="data-success" class="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg flex items-start gap-2 hidden">
+                                <svg class="w-3 h-3 text-gray-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="text-[10px] text-gray-600">
+                                    <p class="font-medium">Data loaded successfully</p>
+                                    <p class="text-gray-500">Ready for training</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Base Model Selection -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden base-model-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                Base Model
+                            </h2>
+                        </div>
+
+                        <div class="p-3">
+                            <select id="base-model" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="A">3C90</option>
+                                <option value="B">3C94</option>
+                                <option value="C">3E6</option>
+                                <option value="D">3F4</option>
+                                <option value="E">Other Material</option>
+                            </select>
+
+                            <div class="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-[10px] text-gray-600 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span>Parameters:</span>
+                                        <span class="font-medium text-gray-800">~6K</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>LSTM Hidden Size:</span>
+                                        <span class="font-medium text-gray-800">40</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>MLP Hidden Size:</span>
+                                        <span class="font-medium text-gray-800">16</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Parameters -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-grow hyperparameters-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Hyperparameters
+                            </h2>
+                        </div>
+
+                        <div class="p-3 space-y-2">
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Epochs</label>
+                                <input type="number" id="epochs" value="100" min="10" max="1000" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Learning Rate</label>
+                                <input type="number" id="learning-rate" value="0.001" step="0.0001" min="0.0001" max="0.1" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Batch Size</label>
+                                <input type="number" id="batch-size" value="32" min="8" max="128" step="8" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Validation Split</label>
+                                <input type="number" id="validation-split" value="0.2" step="0.05" min="0.1" max="0.4" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Window Stride</label>
+                                <input type="number" id="window-size" value="500" min="1" max="1000" step="50" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                <p class="text-[9px] text-gray-500 mt-0.5">Sliding step size (window size fixed at 1000)</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Loss Function</label>
+                                <select id="loss-type" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                    <option value="MSE">MSE</option>
+                                    <option value="RMSE">RMSE</option>
+                                    <option value="energy">Energy Loss</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-medium text-gray-700 mb-0.5">Frozen Layers</label>
+                                <input type="number" id="frozen-layers" value="1" min="0" max="3" class="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Training Button -->
+                            <button id="start-training" class="w-full bg-gray-900 text-white py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-gray-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="training-btn-text">Start Training</span>
+                    </button>
+                </section>
+
+                <!-- Middle Panel - Model Architecture & Visualization -->
+                <section class="col-span-5 flex flex-col gap-3 overflow-y-auto">
+                    <!-- Model Architecture Diagram -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                Neural Network Architecture
+                            </h2>
+                        </div>
+
+                        <div class="p-4 bg-gray-50">
+                            <img src="/static/images/model.svg" alt="Neural Network Architecture" class="w-full architecture-svg" style="height: 300px; object-fit: contain;">
+                        </div>
+                    </div>
+
+                    <!-- Training Progress & Loss Curves -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden training-progress-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Training Progress
+                            </h2>
+                        </div>
+
+                        <div class="p-3">
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-gray-600 font-medium">Epoch Progress</span>
+                                    <span class="text-gray-800 font-bold" id="progress-percent">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div id="progress-bar" class="bg-gray-900 h-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <p id="training-status" class="text-[10px] text-gray-500 mt-1.5 hidden">Training on <span id="sample-count">0</span> samples...</p>
+                            </div>
+
+                            <!-- Loss & Accuracy Charts -->
+                            <div class="space-y-3">
+                                <!-- Loss Chart -->
+                                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                    <h4 class="text-[10px] font-semibold text-gray-700 mb-2">Loss Curves</h4>
+                                    <div class="chart-container" style="height: 150px; width: 100%;">
+                                        <canvas id="loss-chart"></canvas>
+                                    </div>
+                                    <div class="flex gap-3 mt-2 text-[10px] justify-center">
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="w-3 h-0.5" style="background-color: #3b82f6;"></div>
+                                            <span class="text-gray-600">Training Loss</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="w-3 h-0.5" style="background-image: repeating-linear-gradient(to right, #10b981 0, #10b981 4px, transparent 4px, transparent 8px);"></div>
+                                            <span class="text-gray-600">Validation Loss</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RMSE Chart -->
+                                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                    <h4 class="text-[10px] font-semibold text-gray-700 mb-2">Model Accuracy (RMSE)</h4>
+                                    <div class="chart-container" style="height: 150px; width: 100%;">
+                                        <canvas id="rmse-chart"></canvas>
+                                    </div>
+                                    <div class="flex gap-3 mt-2 text-[10px] justify-center">
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="w-3 h-0.5" style="background-color: #3b82f6;"></div>
+                                            <span class="text-gray-600">Training RMSE</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="w-3 h-0.5" style="background-image: repeating-linear-gradient(to right, #10b981 0, #10b981 4px, transparent 4px, transparent 8px);"></div>
+                                            <span class="text-gray-600">Validation RMSE</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Panel - Metrics & Export -->
+                <section class="col-span-4 flex flex-col gap-3 overflow-y-auto">
+                    <!-- Real-time Metrics -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-y-auto flex-grow metrics-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Performance Metrics
+                            </h2>
+                        </div>
+
+                        <div class="p-3 space-y-2">
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Training Loss</span>
+                                    <span class="text-[10px] text-gray-600">Epoch <span id="current-epoch">0</span></span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="train-loss-value">0.000000</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="train-loss-compare">-</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Validation Loss</span>
+                                    <span class="text-[10px] text-gray-600">Epoch <span id="val-epoch">0</span></span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="val-loss-value">0.000000</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="val-loss-compare">-</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Training RMSE</span>
+                                    <span class="text-[10px] text-gray-600">Current</span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="train-rmse-value">0.0%</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="train-rmse-compare">vs Initial: -</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Validation RMSE</span>
+                                    <span class="text-[10px] text-gray-600">Current</span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="val-rmse-value">0.0%</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="val-rmse-compare">vs Initial: -</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Training Energy Loss</span>
+                                    <span class="text-[10px] text-gray-600">Current</span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="train-energy-loss-value">0.0%</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="train-energy-compare">vs Initial: -</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Validation Energy Loss</span>
+                                    <span class="text-[10px] text-gray-600">Current</span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="val-energy-loss-value">0.0%</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="val-energy-compare">vs Initial: -</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="text-[10px] font-medium text-gray-700">Training Time</span>
+                                    <span class="text-[10px] text-gray-600">Elapsed</span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800" id="training-time">0m 0s</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5" id="per-epoch-time">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Model Export -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden export-section">
+                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+                            <h2 class="text-gray-800 font-semibold text-xs flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export Trained Model
+                            </h2>
+                        </div>
+
+                        <div class="p-3 space-y-2">
+                            <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                                <p class="text-[10px] text-gray-600 mb-1.5" id="export-status">Model training in progress.</p>
+                                <div id="export-ready" class="flex items-center gap-1.5 text-[10px] text-gray-600 hidden">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="font-medium">Model validated and ready</span>
+                                </div>
+                            </div>
+
+                            <!-- Download Model Definition button commented out -->
+                            <!--
+                            <button id="export-model" disabled class="w-full bg-gray-900 text-white py-2 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-gray-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download Model Definition (.sd)
+                            </button>
+                            -->
+
+                            <button id="export-weights" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download Weights (.sd)
+                            </button>
+
+                            <button id="export-pdf" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download Training Report (.pdf)
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+    </div>
+
+    <script>
+        // State management
+        let currentTaskId = null;
+        let isTraining = false;
+        let pollInterval = null;
+        let startTime = null;
+        let lossChart = null;
+        let rmseChart = null;
+        let initialRmse = null;
+        let initialEnergyLoss = null;
+        
+        // Initialize Chart.js charts
+        function initCharts() {
+            const lossCtx = document.getElementById('loss-chart').getContext('2d');
+            lossChart = new Chart(lossCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Training Loss',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 1.5,
+                            pointHoverRadius: 3,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Validation Loss',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            pointRadius: 1.5,
+                            pointHoverRadius: 3,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(6);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Epoch'
+                            },
+                            grid: {
+                                display: true,
+                                color: '#e2e8f0'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Loss'
+                            },
+                            grid: {
+                                display: true,
+                                color: '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const rmseCtx = document.getElementById('rmse-chart').getContext('2d');
+            rmseChart = new Chart(rmseCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Training RMSE',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 1.5,
+                            pointHoverRadius: 3,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Validation RMSE',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            pointRadius: 1.5,
+                            pointHoverRadius: 3,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Epoch'
+                            },
+                            grid: {
+                                display: true,
+                                color: '#e2e8f0'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'RMSE (%)'
+                            },
+                            grid: {
+                                display: true,
+                                color: '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize charts on page load
+        initCharts();
+
+        // File upload handler
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.endsWith('.zip')) {
+                alert('Only ZIP files are accepted');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert('Upload failed: ' + result.error);
+                    return;
+                }
+                
+                currentTaskId = result.task_id;
+                
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-size').textContent = (file.size / 1024).toFixed(2) + ' KB';
+                document.getElementById('file-samples').textContent = result.samples + ' samples';
+                document.getElementById('file-info').classList.remove('hidden');
+                document.getElementById('file-hint').classList.add('hidden');
+                document.getElementById('data-success').classList.remove('hidden');
+                
+                updateStartButton();
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        });
+
+        // Start training handler
+        document.getElementById('start-training').addEventListener('click', async () => {
+            if (!currentTaskId || isTraining) return;
+            
+            // Collect parameters
+            const baseModelMap = {
+                'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E'
+            };
+            const baseModelSelect = document.getElementById('base-model');
+            const baseModel = baseModelMap[baseModelSelect.value] || 'A';
+            
+            const params = {
+                task_id: currentTaskId,
+                base_model: baseModel,
+                epochs: parseInt(document.getElementById('epochs').value),
+                learning_rate: parseFloat(document.getElementById('learning-rate').value),
+                batch_size: parseInt(document.getElementById('batch-size').value),
+                validation_split: parseFloat(document.getElementById('validation-split').value),
+                window_size: parseInt(document.getElementById('window-size').value),
+                loss_type: document.getElementById('loss-type').value,
+                frozen_layers: parseInt(document.getElementById('frozen-layers').value)
+            };
+            
+            // Frontend validation
+            if (params.epochs < 10 || params.epochs > 1000) {
+                alert('Epochs must be between 10 and 1000');
+                return;
+            }
+            if (params.learning_rate < 0.0001 || params.learning_rate > 0.1) {
+                alert('Learning Rate must be between 0.0001 and 0.1');
+                return;
+            }
+            if (params.batch_size < 8 || params.batch_size > 128) {
+                alert('Batch Size must be between 8 and 128');
+                return;
+            }
+            if (params.validation_split < 0.1 || params.validation_split > 0.4) {
+                alert('Validation Split must be between 0.1 and 0.4');
+                return;
+            }
+            if (params.window_size < 1 || params.window_size > 1000) {
+                alert('Window Stride must be between 1 and 1000');
+                return;
+            }
+            if (params.frozen_layers < 0 || params.frozen_layers > 3) {
+                alert('Frozen Layers must be between 0 and 3');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/finetune', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert('Failed to start training: ' + result.error);
+                    return;
+                }
+                
+                isTraining = true;
+                startTime = Date.now();
+                initialRmse = null;
+                initialEnergyLoss = null;
+                
+                // Reset charts
+                if (lossChart) {
+                    lossChart.data.labels = [];
+                    lossChart.data.datasets[0].data = [];
+                    lossChart.data.datasets[1].data = [];
+                    lossChart.update();
+                }
+                if (rmseChart) {
+                    rmseChart.data.labels = [];
+                    rmseChart.data.datasets[0].data = [];
+                    rmseChart.data.datasets[1].data = [];
+                    rmseChart.update();
+                }
+                
+                document.getElementById('start-training').disabled = true;
+                document.getElementById('training-btn-text').textContent = 'Training in Progress...';
+                document.getElementById('training-status').classList.remove('hidden');
+                document.getElementById('sample-count').textContent = '...';
+                
+                // Start polling
+                startPolling();
+            } catch (error) {
+                alert('Failed to start training: ' + error.message);
+            }
+        });
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                if (!currentTaskId) return;
+                
+                try {
+                    const response = await fetch(`/api/poll/${currentTaskId}`);
+                    const status = await response.json();
+                    
+                    if (status.status === 'completed' || status.status === 'failed') {
+                        clearInterval(pollInterval);
+                        isTraining = false;
+                        
+                        if (status.status === 'completed') {
+                            // document.getElementById('export-model').disabled = false; // Commented out
+                            document.getElementById('export-weights').disabled = false;
+                            document.getElementById('export-pdf').disabled = false;
+                            document.getElementById('export-ready').classList.remove('hidden');
+                            document.getElementById('export-status').textContent = 'Model training completed successfully. Ready for export.';
+                            document.getElementById('training-status').classList.add('hidden');
+                        } else {
+                            alert('Training failed: ' + status.message);
+                            document.getElementById('training-status').classList.add('hidden');
+                        }
+                        
+                        document.getElementById('start-training').disabled = false;
+                        document.getElementById('training-btn-text').textContent = 'Start Training';
+                    } else if (status.status === 'training') {
+                        // Update sample count from training windows
+                        const trainWindows = status.train_windows || 0;
+                        if (trainWindows > 0) {
+                            document.getElementById('sample-count').textContent = trainWindows;
+                        }
+                        
+                        // Store initial metrics
+                        if (status.initial_rmse !== null && status.initial_rmse !== undefined && initialRmse === null) {
+                            initialRmse = status.initial_rmse;
+                        }
+                        if (status.initial_energy_loss !== null && status.initial_energy_loss !== undefined && initialEnergyLoss === null) {
+                            initialEnergyLoss = status.initial_energy_loss;
+                        }
+                    }
+                    
+                    updateProgress(status);
+                    updateMetrics(status);
+                } catch (error) {
+                    console.error('Polling failed:', error);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        function updateProgress(status) {
+            const progress = status.progress || 0;
+            document.getElementById('progress-percent').textContent = progress + '%';
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('current-epoch').textContent = status.current_epoch || 0;
+        }
+
+        function updateMetrics(status) {
+            // Update loss values
+            if (status.train_loss && status.train_loss.length > 0) {
+                const latestLoss = status.train_loss[status.train_loss.length - 1];
+                const firstLoss = status.train_loss[0];
+                const percentChange = firstLoss > 0 ? ((firstLoss - latestLoss) / firstLoss * 100).toFixed(1) : '0.0';
+                document.getElementById('train-loss-value').textContent = latestLoss.toFixed(6);
+                document.getElementById('train-loss-compare').textContent = `↓ ${percentChange}% from start`;
+            }
+            
+            if (status.val_loss && status.val_loss.length > 0) {
+                const latestValLoss = status.val_loss[status.val_loss.length - 1];
+                const firstValLoss = status.val_loss[0];
+                const percentChange = firstValLoss > 0 ? ((firstValLoss - latestValLoss) / firstValLoss * 100).toFixed(1) : '0.0';
+                document.getElementById('val-loss-value').textContent = latestValLoss.toFixed(6);
+                document.getElementById('val-loss-compare').textContent = `↓ ${percentChange}% from start`;
+            }
+            
+            // Update Training RMSE
+            if (status.train_rmse && status.train_rmse.length > 0) {
+                const latestRmse = status.train_rmse[status.train_rmse.length - 1];
+                document.getElementById('train-rmse-value').textContent = latestRmse.toFixed(2) + '%';
+                if (initialRmse !== null && initialRmse !== undefined) {
+                    const diff = initialRmse - latestRmse;
+                    const sign = diff >= 0 ? '↓' : '↑';
+                    document.getElementById('train-rmse-compare').textContent = `vs Initial: ${sign} ${Math.abs(diff).toFixed(2)}%`;
+                }
+            }
+            
+            // Update Validation RMSE
+            if (status.val_rmse && status.val_rmse.length > 0) {
+                const latestRmse = status.val_rmse[status.val_rmse.length - 1];
+                document.getElementById('val-rmse-value').textContent = latestRmse.toFixed(2) + '%';
+                if (initialRmse !== null && initialRmse !== undefined) {
+                    const diff = initialRmse - latestRmse;
+                    const sign = diff >= 0 ? '↓' : '↑';
+                    document.getElementById('val-rmse-compare').textContent = `vs Initial: ${sign} ${Math.abs(diff).toFixed(2)}%`;
+                }
+            }
+            
+            // Update Training Energy Loss
+            if (status.train_energy_loss && status.train_energy_loss.length > 0) {
+                const latestEnergy = status.train_energy_loss[status.train_energy_loss.length - 1];
+                document.getElementById('train-energy-loss-value').textContent = latestEnergy.toFixed(2) + '%';
+                if (initialEnergyLoss !== null && initialEnergyLoss !== undefined) {
+                    const diff = initialEnergyLoss - latestEnergy;
+                    const sign = diff >= 0 ? '↓' : '↑';
+                    document.getElementById('train-energy-compare').textContent = `vs Initial: ${sign} ${Math.abs(diff).toFixed(2)}%`;
+                }
+            }
+            
+            // Update Validation Energy Loss
+            if (status.val_energy_loss && status.val_energy_loss.length > 0) {
+                const latestEnergy = status.val_energy_loss[status.val_energy_loss.length - 1];
+                document.getElementById('val-energy-loss-value').textContent = latestEnergy.toFixed(2) + '%';
+                if (initialEnergyLoss !== null && initialEnergyLoss !== undefined) {
+                    const diff = initialEnergyLoss - latestEnergy;
+                    const sign = diff >= 0 ? '↓' : '↑';
+                    document.getElementById('val-energy-compare').textContent = `vs Initial: ${sign} ${Math.abs(diff).toFixed(2)}%`;
+                }
+            }
+            
+            // Update training time and per epoch time
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('training-time').textContent = `${minutes}m ${seconds}s`;
+                
+                // Calculate per epoch time
+                if (status.epoch_times && status.epoch_times.length > 0) {
+                    const avgEpochTime = status.epoch_times.reduce((a, b) => a + b, 0) / status.epoch_times.length;
+                    document.getElementById('per-epoch-time').textContent = `~${avgEpochTime.toFixed(1)}s per epoch`;
+                }
+            }
+            
+            // Update loss charts
+            if (status.train_loss && status.train_loss.length > 0) {
+                updateLossChart(status.train_loss, status.val_loss);
+            }
+            
+            // Update RMSE chart
+            if (status.train_rmse && status.train_rmse.length > 0) {
+                updateRmseChart(status.train_rmse, status.val_rmse);
+            }
+        }
+
+        function updateLossChart(trainLoss, valLoss) {
+            if (!lossChart) return;
+            
+            const epochs = trainLoss.map((_, i) => i + 1);
+            lossChart.data.labels = epochs;
+            lossChart.data.datasets[0].data = trainLoss;
+            if (valLoss && valLoss.length > 0) {
+                lossChart.data.datasets[1].data = valLoss;
+            }
+            lossChart.update('none');
+        }
+
+        function updateRmseChart(trainRmse, valRmse) {
+            if (!rmseChart) return;
+            
+            const epochs = trainRmse.map((_, i) => i + 1);
+            rmseChart.data.labels = epochs;
+            rmseChart.data.datasets[0].data = trainRmse;
+            if (valRmse && valRmse.length > 0) {
+                rmseChart.data.datasets[1].data = valRmse;
+            }
+            rmseChart.update('none');
+        }
+
+        function updateStartButton() {
+            const btn = document.getElementById('start-training');
+            btn.disabled = !currentTaskId || isTraining;
+        }
+
+        // Export handlers
+        // document.getElementById('export-model').addEventListener('click', () => { // Commented out
+        //     if (!currentTaskId) return;
+        //     window.location.href = `/api/download/${currentTaskId}/model`;
+        // });
+
+        document.getElementById('export-weights').addEventListener('click', () => {
+            if (!currentTaskId) return;
+            window.location.href = `/api/download/${currentTaskId}/weights`;
+        });
+
+        document.getElementById('export-pdf').addEventListener('click', () => {
+            if (!currentTaskId) return;
+            window.location.href = `/api/download/${currentTaskId}/report`;
+        });
+
+        // Initialize
+        updateStartButton();
+    </script>
+  </body>
+</html>

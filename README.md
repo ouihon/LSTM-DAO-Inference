@@ -89,38 +89,49 @@ ai-magnetic-design/
 
 ## Usage
 
-### Design Center
+For comprehensive documentation with detailed instructions, examples, and troubleshooting, visit the [User Documentation](http://localhost:6008/document) page after starting the application.
 
+### Quick Start Guide
+
+#### Design Center
 1. Navigate to the Design Center from the main menu
-2. Adjust core parameters:
-   - **R (Outer Radius)**: Outer radius of toroidal core (mm)
-   - **r (Inner Radius)**: Inner radius of toroidal core (mm)
-   - **d (Height/Thickness)**: Height/thickness of core (mm)
-   - **N (Number of Turns)**: Number of wire turns
-3. Configure operating conditions:
-   - Select topology (Single-Phase, 3-Phase Full Bridge, or 3-Phase T-Type)
-   - Set DC voltage, grid voltage, frequency, etc.
-4. Select flux region on charts to trigger AI predictions
-5. View real-time visualizations of magnetic properties
+2. Adjust core parameters (R, r, d, N) and observe real-time calculations for Ae, Le, and L
+3. Configure operating conditions: topology, voltages, frequencies, filter parameters
+4. Select materials and view magnetic properties in synchronized charts
+5. Select flux regions to trigger AI predictions for B-H curves
 
-### Model Fine-tuning
+#### Grid-Connected DC-AC Simulation
+The platform includes a comprehensive time-domain simulation model for grid-connected inverters with:
+- Three supported topologies: Single-Phase Full Bridge, 3Phase Full Bridge, 3Phase T-Type Three-Level
+- Power-based PI controller with adjustable Kp and Ki gains
+- Optional harmonic injection (3rd, 5th, 7th harmonics)
+- Synchronized chart visualization with zoom/pan capabilities
+- Flux selection for AI prediction triggering
 
-1. Navigate to Model Libraries from the main menu
-2. Upload training data:
-   - Prepare a ZIP file containing `H.csv`, `B.csv`, and `T.csv`
-   - Data format: `H.csv` and `B.csv` should be (N samples, M time steps)
-   - `T.csv` should be (N samples, 1) - one temperature value per sample
-3. Configure hyperparameters:
-   - **Base Model**: Select pre-trained model (A-E)
-   - **Epochs**: Number of training epochs (10-1000)
-   - **Learning Rate**: Training learning rate (0.0001-0.1)
-   - **Batch Size**: Batch size for training (8-128)
-   - **Validation Split**: Fraction for validation (0.1-0.4)
-   - **Window Stride**: Stride for sliding windows (1-1000)
-   - **Loss Function**: MSE, RMSE, or Energy loss
-   - **Frozen Layers**: Number of layers to freeze (0-3)
-4. Start training and monitor progress
-5. Download trained weights and training report
+#### Model Libraries
+Access pre-trained neural network models for five magnetic materials:
+- **3C90**: High-frequency ferrite material
+- **3C94**: Advanced soft magnetic material with low core loss  
+- **3E6**: Non-crystalline magnetic material
+- **3F4**: Composite material with distributed air gaps
+- **Custom Model**: User-trained models for specific applications
+
+#### Model Training & Fine-tuning
+1. Upload training data as ZIP containing H.csv, B.csv, T.csv
+2. Select base model (A-E) and configure hyperparameters
+3. Monitor real-time training metrics (loss curves, RMSE, Energy Loss)
+4. Download trained weights (.sd) and comprehensive PDF report
+
+### Detailed Documentation Sections
+The User Documentation page provides comprehensive coverage of:
+- **Getting Started**: System requirements and key features
+- **Design Center**: Core parameters, visualization tools, chart synchronization
+- **Grid-Connected DC-AC Simulation**: System architecture, PWM modeling, power control
+- **Model Libraries**: Pre-trained model specifications and selection
+- **Parameters & Settings**: Valid parameter ranges and model settings
+- **Model Training**: Dataset format, hyperparameters, training metrics
+- **Export & Integration**: Model weights and training report export
+- **Troubleshooting**: Common issues and solutions
 
 ### API Endpoints
 

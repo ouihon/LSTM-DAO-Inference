@@ -1,6 +1,6 @@
 # AI Magnetic Component Design Platform
 
-A comprehensive web-based platform for designing and optimizing magnetic components, particularly for DC-AC converters. This system combines advanced neural network models with intuitive design tools to help engineers create efficient magnetic components.
+A comprehensive web-based platform for designing and optimizing magnetic components, particularly for DC-AC converters. This system combines advanced neural network models with intuitive design tools to help engineers create efficient magnetic components. We have developed a [online website](https://u2802747-b031-2c6ccc63.westb.seetacloud.com:8443) to simulate and analyse, or you can try to deploy this in your own machine. 
 
 ## Features
 
@@ -13,7 +13,7 @@ A comprehensive web-based platform for designing and optimizing magnetic compone
 
 ## System Requirements
 
-- Python 3.7 or higher
+- Python 3.10 or higher
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 - JavaScript enabled
 - Internet connection for initial load
@@ -21,6 +21,13 @@ A comprehensive web-based platform for designing and optimizing magnetic compone
 - GPU recommended for faster model inference (CUDA-compatible)
 
 ## Installation
+
+### 0. (Optional) Create a virtual python environment using Conda, Virtualenv or something
+
+```bash
+conda create -n magica python=3.7
+conda activate magica
+```
 
 ### 1. Clone the Repository
 

@@ -25,8 +25,8 @@ A comprehensive web-based platform for designing and optimizing magnetic compone
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd Magnetic_App
+git clone https://github.com/ouihon/ai-magnetic-design.git
+cd ai-magnetic-design
 ```
 
 ### 2. Install Dependencies
@@ -59,7 +59,7 @@ The application will start on `http://localhost:6008` by default.
 ## Project Structure
 
 ```
-Magnetic_App/
+ai-magnetic-design/
 ├── app.py                 # Main Flask application
 ├── train_finetune.py      # Model fine-tuning training script
 ├── models/                # Model definitions
@@ -315,7 +315,7 @@ rm -rf temp/*
 
 ## License
 
-[Specify your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Authors
 

@@ -1,15 +1,8 @@
 """
-Model Fine-tuning Training Script
+Model fine-tuning training script for magnetic component models.
 
-This module handles fine-tuning of pre-trained magnetic component models.
-It supports:
-- Sliding window data preparation
-- Multiple loss functions (MSE, RMSE, Energy)
-- Layer freezing for transfer learning
-- Real-time training status tracking
-- PDF report generation
-
-Author: Magnetic Design Team
+Supports sliding window data preparation, multiple loss functions,
+layer freezing, training status tracking, and report generation.
 """
 
 import torch
@@ -33,9 +26,6 @@ from models.modelC import Hybrid_PI_Model as ModelC
 from models.modelD import Hybrid_PI_Model as ModelD
 from models.modelE import Hybrid_PI_Model as ModelE
 
-# ========== Model Class Mapping ==========
-
-# Map model IDs to their corresponding model classes
 MODEL_CLASSES = {
     'A': ModelA,
     'B': ModelB,
@@ -44,22 +34,14 @@ MODEL_CLASSES = {
     'E': ModelE
 }
 
-# Device configuration: use GPU if available, otherwise CPU
 _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Global dictionary to store training status for all tasks
-# Structure: {task_id: {status, progress, metrics, ...}}
 training_status = {}
 
 
 # ========== Evaluation Metrics ==========
 
 def compute_sequence_relative_error(H_pred, H_true):
-    """
-    Compute Sequence Relative Error (RMSE percentage)
-    
-    This metric measures the relative error between predicted and true H sequences.
-    Formula: RMSE_pm = (RMS_diff / RMS_true) * 100%
+    """Compute Sequence Relative Error (RMSE percentage).
     
     Args:
         H_pred: numpy array, shape (num_seq, T) - predicted H sequences
@@ -67,6 +49,9 @@ def compute_sequence_relative_error(H_pred, H_true):
     
     Returns:
         numpy array: RMSE percentage for each sequence [%]
+    
+    Raises:
+        AssertionError: if H_pred and H_true shapes don't match
     """
     assert H_pred.shape == H_true.shape, "H_pred and H_true must have same shape [num_seq, T]"
     
@@ -80,13 +65,7 @@ def compute_sequence_relative_error(H_pred, H_true):
 
 
 def compute_energy_density_normalized_error(H_pred, H_true, B_true):
-    """
-    Compute Energy Density Normalized Relative Error (percentage)
-    
-    This metric measures the error in energy density calculation, which is important
-    for magnetic component design as it relates to core loss.
-    Formula: ene_error = ((W_pred - W_true) / W_true) * 100%
-    where W = ∫ H dB (energy density)
+    """Compute Energy Density Normalized Relative Error (percentage).
     
     Args:
         H_pred: numpy array, shape (num_seq, T) - predicted H sequences
@@ -95,22 +74,20 @@ def compute_energy_density_normalized_error(H_pred, H_true, B_true):
     
     Returns:
         numpy array: Energy error percentage for each sequence [%]
+    
+    Raises:
+        AssertionError: if shapes don't match
     """
     assert H_pred.shape == H_true.shape == B_true.shape, \
         f"Shape mismatch: H_pred{H_pred.shape}, H_true{H_true.shape}, B_true{B_true.shape}"
     
-    # Calculate dB (change in B)
     dB = np.diff(B_true, axis=1)
-    
-    # Use midpoint values for H (trapezoidal integration)
     H_true_mid = 0.5 * (H_true[:, :-1] + H_true[:, 1:])
     H_pred_mid = 0.5 * (H_pred[:, :-1] + H_pred[:, 1:])
     
-    # Calculate energy density: W = ∫ H dB ≈ sum(H_mid * dB)
     W_true = np.sum(H_true_mid * dB, axis=1)
     W_pred = np.sum(H_pred_mid * dB, axis=1)
     
-    # Avoid division by zero
     eps = 1e-12
     denom = np.where(np.abs(W_true) < eps, np.sign(W_true) * eps + eps, W_true)
     ene_error = (W_pred - W_true) / denom * 100.0

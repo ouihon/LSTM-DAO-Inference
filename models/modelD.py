@@ -1,10 +1,7 @@
 """
-Model D Definition and Prediction Functions
+Model D definition and prediction functions for material 3F4.
 
-This module contains the model architecture and prediction logic for Model D.
-It does not include training code - only inference functionality.
-
-Model D is designed for material 3F4.
+Contains model architecture and inference logic (no training code).
 """
 
 import torch

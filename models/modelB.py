@@ -1,10 +1,7 @@
 """
-Model B Definition and Prediction Functions
+Model B definition and prediction functions for material 3C94.
 
-This module contains the model architecture and prediction logic for Model B.
-It does not include training code - only inference functionality.
-
-Model B is designed for material 3C94.
+Contains model architecture and inference logic (no training code).
 """
 
 import torch

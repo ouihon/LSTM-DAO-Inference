@@ -1,11 +1,8 @@
 """
-Model E Definition and Prediction Functions
+Model E definition and prediction functions for other materials.
 
-This module contains the model architecture and prediction logic for Model E.
-It does not include training code - only inference functionality.
-
-Model E is designed for other materials (not 3C90, 3C94, 3E6, or 3F4).
-It uses a SmoothPI operator instead of ExtendedPI for faster computation.
+Uses SmoothPI operator for faster computation.
+Contains model architecture and inference logic (no training code).
 """
 
 import torch

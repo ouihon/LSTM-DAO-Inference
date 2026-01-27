@@ -53,7 +53,6 @@
         
         /* Large screen adaptation (>3000x>2000) */
         @media (min-width: 3000px) and (min-height: 2000px) {
-            /* 设置三列最大高度 */
             section.col-span-3,
             section.col-span-5,
             section.col-span-4 {
@@ -61,7 +60,6 @@
                 overflow-y: auto !important;
             }
             
-            /* 稍微增加字体大小 */
             .text-xs {
                 font-size: 0.875rem !important;
             }
@@ -74,7 +72,6 @@
                 font-size: 0.625rem !important;
             }
             
-            /* 增加Training Data区域高度 */
             .training-data-section {
                 min-height: 220px !important;
             }
@@ -100,7 +97,6 @@
                 padding: 1rem !important;
             }
             
-            /* 大幅减少HyperParameters控件高度和间距 */
             .hyperparameters-section {
                 flex-grow: 0 !important;
                 max-height: 500px !important;
@@ -130,7 +126,6 @@
                 font-size: 0.625rem !important;
             }
             
-            /* 减少Export Trained Model区域高度和内边距 */
             .export-section {
                 min-height: auto !important;
                 max-height: 200px !important;
@@ -154,7 +149,6 @@
                 font-size: 0.625rem !important;
             }
             
-            /* 减少Performance Metrics区域高度，但确保所有指标可见 */
             .metrics-section {
                 flex-grow: 0 !important;
                 min-height: auto !important;
@@ -185,34 +179,28 @@
                 font-size: 0.625rem !important;
             }
             
-            /* 增加图表高度 */
             .chart-container {
                 height: 180px !important;
             }
             
-            /* 增加架构图高度 */
             .architecture-svg {
                 height: 360px !important;
             }
             
-            /* 减少Training Progress区域高度，避免底部空白 */
             .training-progress-section {
                 flex-grow: 0 !important;
                 min-height: auto !important;
             }
             
-            /* 确保中间列内容紧凑排列 */
             section.col-span-5 {
                 justify-content: flex-start !important;
             }
             
-            /* 增加按钮高度 */
             .py-2\.5 {
                 padding-top: 1rem !important;
                 padding-bottom: 1rem !important;
             }
             
-            /* 增加SVG图标大小 */
             .w-3\.5, .h-3\.5 {
                 width: 1rem !important;
                 height: 1rem !important;

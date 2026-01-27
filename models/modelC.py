@@ -1,10 +1,7 @@
 """
-Model C Definition and Prediction Functions
+Model C definition and prediction functions for material 3E6.
 
-This module contains the model architecture and prediction logic for Model C.
-It does not include training code - only inference functionality.
-
-Model C is designed for material 3E6.
+Contains model architecture and inference logic (no training code).
 """
 
 import torch

@@ -25,7 +25,7 @@ A comprehensive web-based platform for designing and optimizing magnetic compone
 ### 0. (Optional) Create a virtual python environment using Conda, Virtualenv or something
 
 ```bash
-conda create -n magica python=3.7
+conda create -n magica python=3.10
 conda activate magica
 ```
 

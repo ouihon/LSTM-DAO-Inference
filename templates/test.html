@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic AI Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .slider-control {
+            margin-bottom: 0.75rem;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        .slider-value {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #2563eb;
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 0.375rem;
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            appearance: none;
+            cursor: pointer;
+            accent-color: #2563eb;
+        }
+        input[type="range"]:hover {
+            accent-color: #3b82f6;
+        }
+        input[type="range"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #bfdbfe;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .loading-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            min-width: 300px;
+            text-align: center;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+            background-size: 200% 100%;
+            animation: progress 1.5s ease-in-out infinite;
+            width: 100%;
+        }
+        @keyframes progress {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .file-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .file-upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        .material-item {
+            transition: all 0.2s;
+        }
+        .material-item:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="text-sm font-medium text-slate-700">Predicting...</p>
+            <p class="text-xs text-slate-500 mt-1">Please wait</p>
+            <div class="loading-progress">
+                <div class="loading-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="p-4">
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Left Panel: File Upload, Temperature & Material Selection -->
+            <section class="col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col" style="max-height: 850px;">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <h2 class="font-semibold text-sm text-slate-700">Material Selection</h2>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="p-4 border-b border-slate-200">
+                    <h3 class="text-xs font-semibold text-slate-700 mb-3">Import B Data (B.csv)</h3>
+                    <div class="file-upload-area" id="file-upload-area">
+                        <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-xs text-slate-600 mb-1">Click to upload or drag & drop</p>
+                        <p class="text-xs text-slate-400">Single line, comma separated (Unit: T)</p>
+                        <input type="file" id="b-file-input" accept=".csv" class="hidden">
+                    </div>
+                    <div id="file-info" class="mt-3 hidden">
+                        <div class="flex items-center justify-between bg-blue-50 rounded p-2">
+                            <span class="text-xs text-blue-700 font-medium" id="file-name"></span>
+                            <button id="clear-file" class="text-xs text-red-600 hover:text-red-800 underline">Remove</button>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">
+                            <span id="data-points" class="font-semibold">0</span> data points
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Temperature Control -->
+                <div class="px-4 py-3 border-b border-slate-200 bg-slate-50">
+                    <div class="slider-control mb-0">
+                        <div class="slider-label">
+                            <label class="text-xs font-medium text-slate-700">Temperature</label>
+                            <span class="slider-value" id="temperature-value">25°C</span>
+                        </div>
+                        <input type="range" id="temperature" min="0" max="100" step="1" value="25">
+                    </div>
+                </div>
+
+                <!-- Materials List (Simplified) -->
+                <div class="p-4 overflow-y-auto flex-1">
+                    <h3 class="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Select Materials for Comparison</h3>
+                    <div class="space-y-2" id="materials-list">
+                        <!-- Materials will be dynamically generated -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Analysis Results -->
+            <section class="col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col" style="min-height: 700px;">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <h2 class="font-semibold text-sm text-slate-700">AI Analysis Results</h2>
+                    </div>
+                    <div id="active-material-display" class="flex items-center gap-2 text-xs">
+                        <span class="text-slate-500">Active:</span>
+                        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                            <span id="active-material-name" class="font-semibold text-slate-700">None</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 grid grid-cols-2 gap-4 flex-1">
+                    <!-- Core Loss Comparison (Total W only) -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col">
+                        <h3 class="text-sm font-bold text-slate-700 mb-2 text-center">Core Loss Comparison (W)</h3>
+                        <div class="flex-1 min-h-[200px]" id="loss-chart">
+                            <div class="empty-state">Upload B.csv and select materials</div>
+                        </div>
+                    </div>
+
+                    <!-- B-H Charts -->
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col flex-1 min-h-[200px]">
+                            <h3 class="text-sm font-bold text-slate-700 mb-2 text-center">Magnetic Flux Density B (T)</h3>
+                            <div class="flex-1" id="b-chart">
+                                <div class="empty-state">Upload B.csv to see results</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col flex-1 min-h-[200px]">
+                            <h3 class="text-sm font-bold text-slate-700 mb-2 text-center">Field Strength H (A/m)</h3>
+                            <div class="flex-1" id="h-chart">
+                                <div class="empty-state">Upload B.csv to predict H</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let temperature = 25;
+        <!-- const timeSpan = 1000; // Fixed time span in ms -->
+		const timeSpan = 6.25e-5;
+        
+        // B data storage
+        let bDataFromFile = null;
+        let isFileLoaded = false;
+
+        // Simplified material data - only id, name and color for display
+        let materials = [
+            { id: 1, name: '3C90', color: '#3b82f6' },
+            { id: 2, name: '3C94', color: '#10b981' },
+            { id: 3, name: '3E6', color: '#f59e0b' },
+            { id: 4, name: '3F4', color: '#ef4444' },
+            { id: 5, name: 'Other Material', color: '#8b5cf6' }
+        ];
+
+        let selectedMaterialIds = [1, 2];
+        let activeMatIds = [1, 2];
+        
+        // 存储预测结果: { materialId: { H_pred: [], core_loss: number } }
+        let predictionResults = {};
+
+        // File Upload Handling
+        function initFileUpload() {
+            const uploadArea = document.getElementById('file-upload-area');
+            const fileInput = document.getElementById('b-file-input');
+            const fileInfo = document.getElementById('file-info');
+            const fileName = document.getElementById('file-name');
+            const dataPoints = document.getElementById('data-points');
+            const clearBtn = document.getElementById('clear-file');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearFile();
+            });
+
+            function handleFile(file) {
+                if (!file.name.endsWith('.csv')) {
+                    alert('Please upload a .csv file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const content = e.target.result;
+                        // Parse single line CSV
+                        const values = content.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                        
+                        if (values.length === 0) {
+                            alert('No valid data found in file');
+                            return;
+                        }
+
+                        bDataFromFile = values;
+                        isFileLoaded = true;
+                        
+                        // Update UI
+                        fileName.textContent = file.name;
+                        dataPoints.textContent = values.length.toLocaleString();
+                        uploadArea.classList.add('hidden');
+                        fileInfo.classList.remove('hidden');
+                        
+                        // Trigger prediction automatically
+                        if (selectedMaterialIds.length > 0) {
+                            requestPredictions();
+                        }
+                    } catch (error) {
+                        alert('Error parsing file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function clearFile() {
+                bDataFromFile = null;
+                isFileLoaded = false;
+                predictionResults = {};
+                fileInput.value = '';
+                uploadArea.classList.remove('hidden');
+                fileInfo.classList.add('hidden');
+                
+                // Clear charts
+                clearAllCharts();
+            }
+        }
+
+        function clearAllCharts() {
+            document.getElementById('loss-chart').innerHTML = '<div class="empty-state">Upload B.csv and select materials</div>';
+            document.getElementById('b-chart').innerHTML = '<div class="empty-state">Upload B.csv to see results</div>';
+            document.getElementById('h-chart').innerHTML = '<div class="empty-state">Upload B.csv to predict H</div>';
+            lossChart = null;
+            bChart = null;
+            hChart = null;
+        }
+
+        function initSliders() {
+            const slider = document.getElementById('temperature');
+            const valueDisplay = document.getElementById('temperature-value');
+            
+            if (slider && valueDisplay) {
+                slider.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    temperature = value;
+                    valueDisplay.textContent = value + '°C';
+                });
+                
+                slider.addEventListener('change', (e) => {
+                    // Temperature changed, re-predict if file loaded
+                    if (isFileLoaded) {
+                        requestPredictions();
+                    }
+                });
+            }
+        }
+
+        function initMaterials() {
+            const container = document.getElementById('materials-list');
+            container.innerHTML = '';
+            
+            materials.forEach(mat => {
+                const isSelected = selectedMaterialIds.includes(mat.id);
+                const button = document.createElement('button');
+                button.className = `material-item w-full flex items-center gap-3 p-3 rounded-lg border text-left ${
+                    isSelected 
+                    ? 'border-blue-500 bg-blue-50 shadow-sm' 
+                    : 'border-slate-200 bg-white hover:bg-slate-50'
+                }`;
+                
+                button.innerHTML = `
+                    <div class="w-4 h-4 rounded-full flex-shrink-0 border-2 ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}" style="background-color: ${isSelected ? mat.color : 'transparent'};">
+                        ${isSelected ? '<svg class="w-3 h-3 text-white mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-slate-700'}">${mat.name}</div>
+                        <div class="text-xs text-slate-500">${isSelected ? 'Selected for analysis' : 'Click to select'}</div>
+                    </div>
+                `;
+                
+                button.addEventListener('click', () => {
+                    toggleMaterialSelection(mat.id);
+                });
+                
+                container.appendChild(button);
+            });
+
+            updateActiveMaterialDisplay();
+        }
+
+        function toggleMaterialSelection(id) {
+            if (selectedMaterialIds.includes(id)) {
+                // Don't allow unselecting if it's the last one
+                if (selectedMaterialIds.length > 1) {
+                    selectedMaterialIds = selectedMaterialIds.filter(matId => matId !== id);
+                    activeMatIds = activeMatIds.filter(matId => matId !== id);
+                    if (activeMatIds.length === 0 && selectedMaterialIds.length > 0) {
+                        activeMatIds = [selectedMaterialIds[0]];
+                    }
+                }
+            } else {
+                selectedMaterialIds.push(id);
+                if (!activeMatIds.includes(id)) {
+                    activeMatIds.push(id);
+                }
+            }
+            
+            initMaterials();
+            
+            // If file is loaded, re-run prediction with new selection
+            if (isFileLoaded) {
+                requestPredictions();
+            }
+        }
+
+        function updateActiveMaterialDisplay() {
+            const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+            const displayElement = document.getElementById('active-material-display');
+            
+            if (activeMaterials.length > 0) {
+                const names = activeMaterials.map(m => m.name).join(', ');
+                document.getElementById('active-material-name').textContent = names;
+            } else {
+                document.getElementById('active-material-name').textContent = 'None';
+            }
+        }
+
+        function showLoadingOverlay() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+        
+        function hideLoadingOverlay() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+
+        async function requestPredictions() {
+            if (!isFileLoaded || !bDataFromFile || bDataFromFile.length === 0) {
+                return;
+            }
+            
+            const selectedMaterials = materials.filter(m => selectedMaterialIds.includes(m.id));
+            if (selectedMaterials.length === 0) return;
+            
+            showLoadingOverlay();
+            
+            try {
+                const predictionPromises = selectedMaterials.map(async (material) => {
+                    try {
+                        const response = await fetch('/api/predict', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                materialId: material.id,
+                                sample: {
+                                    B: bDataFromFile,  // B values in Tesla
+                                    T: temperature,
+                                    real_time: timeSpan / 1000  // Convert ms to seconds
+                                }
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Prediction failed for ${material.name}: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // Store prediction results (core_loss is in Watts)
+                        predictionResults[material.id] = {
+                            H_pred: result.H_pred || [],
+                            core_loss: result.core_loss || 0
+                        };
+                        
+                    } catch (error) {
+                        console.error(`Error predicting for ${material.name}:`, error);
+                        // Set zero values on error
+                        predictionResults[material.id] = {
+                            H_pred: new Array(bDataFromFile.length).fill(0),
+                            core_loss: 0
+                        };
+                    }
+                });
+                
+                await Promise.all(predictionPromises);
+                
+                // Update all charts
+                updateBChartFromFile();
+                updateHChartFromPredictions();
+                updateLossChartFromPredictions();
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('Prediction failed, please try again');
+            } finally {
+                hideLoadingOverlay();
+            }
+        }
+        
+        function updateBChartFromFile() {
+            if (!bDataFromFile) return;
+            
+            const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
+            const allBData = activeMaterials.map(material => {
+                const data = bDataFromFile.map((b, index) => ({
+                    time: index,
+                    B: b * 1000  // Keep in mT for internal consistency, convert back in display
+                }));
+                return { material: material, data: data };
+            });
+            
+            updateBChart(allBData);
+        }
+        
+        function updateHChartFromPredictions() {
+            const selectedMaterials = materials.filter(m => selectedMaterialIds.includes(m.id));
+            
+            const allHData = selectedMaterials
+                .filter(m => predictionResults[m.id] && predictionResults[m.id].H_pred)
+                .map(material => {
+                    const H_pred = predictionResults[material.id].H_pred;
+                    const hData = H_pred.map((h, index) => ({
+                        time: index,
+                        H: h
+                    }));
+                    return { material: material, data: hData };
+                });
+            
+            if (allHData.length > 0) {
+                updateHChart(allHData);
+            }
+        }
+        
+        function updateLossChartFromPredictions() {
+            if (!bDataFromFile || bDataFromFile.length === 0 || Object.keys(predictionResults).length === 0) {
+                return;
+            }
+
+            // Prepare data - only show total loss in Watts (from AI prediction)
+            const lossData = materials
+                .filter(m => selectedMaterialIds.includes(m.id))
+                .map(m => {
+                    const predResult = predictionResults[m.id];
+                    const coreLoss = predResult ? (predResult.core_loss || 0) : 0;
+                    
+                    return {
+                        id: m.id,
+                        name: m.name,
+                        loss: parseFloat(coreLoss.toFixed(4)), // Total loss in Watts
+                        color: m.color
+                    };
+                });
+
+            updateLossChart(lossData);
+        }
+
+        // Chart instances
+        let lossChart, bChart, hChart;
+
+        function updateLossChart(data) {
+            const container = document.getElementById('loss-chart');
+            container.innerHTML = '<canvas id="loss-canvas"></canvas>';
+            const ctx = document.getElementById('loss-canvas').getContext('2d');
+            
+            if (lossChart) lossChart.destroy();
+            
+            // Sort data by loss value descending for better visualization
+            const sortedData = [...data].sort((a, b) => b.loss - a.loss);
+            
+            lossChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedData.map(d => d.name),
+                    datasets: [{
+                        label: 'Core Loss (W)',
+                        data: sortedData.map(d => d.loss),
+                        backgroundColor: sortedData.map(d => d.color),
+                        borderColor: sortedData.map(d => '#1e293b'),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 500
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: (context) => {
+                                    const loss = context.parsed.x;
+                                    return `Total Loss: ${loss.toFixed(4)} W`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { 
+                                display: true, 
+                                text: 'Power Loss (W)', 
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            ticks: { 
+                                font: { size: 11 },
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        y: {
+                            ticks: { 
+                                font: { size: 12, weight: '500' },
+                                color: '#334155'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBChart(materialsData) {
+            const container = document.getElementById('b-chart');
+            container.innerHTML = '<canvas id="b-canvas"></canvas>';
+            const ctx = document.getElementById('b-canvas').getContext('2d');
+            
+            if (bChart) bChart.destroy();
+            
+            let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
+            const firstData = dataArray[0]?.data || [];
+            const labels = firstData.map((d, i) => i);
+            
+            // All materials show the same B curve (from file), but we show one for clarity
+            // Or show all with same data but different colors for visual consistency
+            const datasets = dataArray.map(({ material, data }) => ({
+                label: material.name,
+                data: data.map(d => d.B / 1000), // Convert mT back to T for display
+                borderColor: material.color,
+                backgroundColor: material.color + '20', // Add transparency
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.1,
+                fill: false
+            }));
+            
+            bChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                font: { size: 11 }, 
+                                usePointStyle: true, 
+                                pointStyle: 'line',
+                                boxWidth: 20
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: { 
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(4)} T` 
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            display: true,
+                            title: { 
+                                display: true, 
+                                text: 'Data Point Index', 
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            ticks: { font: { size: 10 }, color: '#64748b' },
+                            grid: { color: '#e2e8f0' }
+                        },
+                        y: {
+                            title: { 
+                                display: true, 
+                                text: 'B (Tesla)', 
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            ticks: { font: { size: 11 }, color: '#64748b' },
+                            grid: { color: '#e2e8f0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateHChart(materialsData) {
+            const container = document.getElementById('h-chart');
+            container.innerHTML = '<canvas id="h-canvas"></canvas>';
+            const ctx = document.getElementById('h-canvas').getContext('2d');
+            
+            if (hChart) hChart.destroy();
+            
+            let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
+            const firstData = dataArray[0]?.data || [];
+            const labels = firstData.map((d, i) => i);
+            
+            const datasets = dataArray.map(({ material, data }) => ({
+                label: material.name,
+                data: data.map(d => d.H),
+                borderColor: material.color,
+                backgroundColor: material.color + '20',
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.1,
+                fill: false
+            }));
+            
+            hChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                font: { size: 11 }, 
+                                usePointStyle: true, 
+                                pointStyle: 'line',
+                                boxWidth: 20
+                            }
+                        },
+                        tooltip: { 
+                            enabled: true,
+                            bodyFont: { size: 12 },
+                            callbacks: { 
+                                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} A/m` 
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            display: true,
+                            title: { 
+                                display: true, 
+                                text: 'Data Point Index', 
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            ticks: { font: { size: 10 }, color: '#64748b' },
+                            grid: { color: '#e2e8f0' }
+                        },
+                        y: {
+                            title: { 
+                                display: true, 
+                                text: 'H (A/m)', 
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            ticks: { font: { size: 11 }, color: '#64748b' },
+                            grid: { color: '#e2e8f0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            initFileUpload();
+            initSliders();
+            initMaterials();
+            // Charts remain empty until file upload
+        });
+    </script>
+</body>
+</html>

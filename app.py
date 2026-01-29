@@ -105,6 +105,16 @@ def fine_tune():
     return render_template('fine_tune.html')
 
 
+@app.route('/test')
+def test():
+    """Render model fine-tuning interface.
+    
+    Returns:
+        Rendered test.html template.
+    """
+    return render_template('test.html')
+
+
 PREDICT_FUNCTIONS = {
     'A': predict_A,
     'B': predict_B,

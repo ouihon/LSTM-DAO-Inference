@@ -91,6 +91,12 @@
                     <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <span class="menu-text font-semibold whitespace-nowrap">Model Libraries</span>
                 </a>
+				<a data-page="test" class="menu-item active flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600">
+					<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zM4 12c0 1.1.9 2 2 2s2-.9 2-2-1.1-2-2-2-2 .9-2 2zM4 4c0 1.1.9 2 2 2s2-.9 2-2-1.1-2-2-2-2 .9-2 2zm8 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM12 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM20 12c0 1.1-.9 2-2 2s-2-.9-2-2 1.1-2 2-2 2 .9 2 2zM20 4c0 1.1-.9 2-2 2s-2-.9-2-2 1.1-2 2-2 2 .9 2 2z"></path>
+					</svg>
+					<span class="menu-text font-semibold whitespace-nowrap">Test Center</span>
+				</a>
                 <a data-page="documents" class="menu-item flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-200">
                     <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span class="menu-text font-semibold whitespace-nowrap">Documents</span>
@@ -131,7 +137,8 @@
         const urlMap = { 
             'design': '/design', 
             'model-libs': '/fine_tune',
-            'documents': '/document' 
+            'documents': '/document',
+			'test' : '/test'
         };
 
         // ========== State Management Functions ==========

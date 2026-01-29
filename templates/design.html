@@ -127,13 +127,13 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 font-sans">
+<body class="min-h-screen bg-slate-50 .text-xslate-800 font-sans">
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p class="text-sm font-medium text-slate-700">Predicting...</p>
-            <p class="text-xs text-slate-500 mt-1">Please wait</p>
+            <p class=".text-xsm font-medium .text-xslate-700">Predicting...</p>
+            <p class=".text-xs .text-xslate-500 mt-1">Please wait</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar"></div>
             </div>
@@ -145,26 +145,26 @@
             <!-- Left Panel: Operating Conditions -->
             <section class="col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                 <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 .text-xslate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <h2 class="font-semibold text-sm text-slate-700">Operating Conditions</h2>
+                    <h2 class="font-semibold .text-xsm .text-xslate-700">Operating Conditions</h2>
                 </div>
 
                 <div class="p-4 space-y-4 overflow-y-auto">
                     <!-- Topology & Power -->
-                    <div class="border-b border-slate-200 pb-4">
-                        <h3 class="text-xs font-semibold text-slate-700 mb-2">Topology & Power</h3>
-                        <div class="flex gap-3">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h3 class=".text-xs font-semibold .text-xslate-700 mb-1">Topology & Power</h3>
+                        <div class="flex gap-2">
                             <div class="flex-shrink-0" style="width: 40%;">
-                                <label class="text-xs font-medium text-slate-600 block mb-2">DC-AC Topology</label>
-                                <select id="topology-select" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:border-blue-500">
+                                <label class=".text-xs font-medium .text-xslate-600 block mb-2">DC-AC Topology</label>
+                                <select id="topology-select" class="w-full px-2 py-1.5 .text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:border-blue-500">
                                     <option value="Single-Phase-full-bridge">Single-Phase Full Bridge</option>
                                     <option value="3Phase-full-bridge">3Phase Full Bridge</option>
                                     <option value="3Phase-T-Type-Three-level">3Phase T-Type Three-Level</option>
                                 </select>
-                                <div id="topology-diagram" class="mt-2 flex items-center justify-center" style="width: 100%; min-height: 120px;">
+                                <div id="topology-diagram" class="mt-0 flex items-center justify-center" style="width: 100%; min-height: 120px;">
                                     <svg viewBox="0 0 200 150" style="width: 100%; max-height: 120px;" preserveAspectRatio="xMidYMid meet">
                                         <image href="/static/images/spfb.png" x="0" y="0" width="200" height="150" preserveAspectRatio="xMidYMid meet"></image>
                                     </svg>
@@ -173,28 +173,28 @@
                             <div class="flex-1 space-y-1">
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">DC Voltage</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">DC Voltage</label>
                                         <span class="slider-value" id="dcVoltage-value">400V</span>
                                     </div>
                                     <input type="range" id="dcVoltage" min="200" max="800" step="10" value="400">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">Frequency</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">Frequency</label>
                                         <span class="slider-value" id="frequency-value">75000Hz</span>
                                     </div>
                                     <input type="range" id="frequency" min="50000" max="100000" step="1000" value="75000">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">Filter L</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">Filter L</label>
                                         <span class="slider-value" id="filterInductance-value">1mH</span>
                                     </div>
                                     <input type="range" id="filterInductance" min="0" max="1.5" step="0.1" value="1">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">Filter C</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">Filter C</label>
                                         <span class="slider-value" id="filterCapacitance-value">2uF</span>
                                     </div>
                                     <input type="range" id="filterCapacitance" min="0" max="20" step="0.1" value="2">
@@ -205,88 +205,88 @@
 
                     <!-- Grid Parameters -->
                     <div>
-                        <h3 class="text-xs font-semibold text-slate-700 mb-3">Grid Parameters</h3>
+                        <h3 class=".text-xs font-semibold .text-xslate-700 mb-3">Grid Parameters</h3>
                         
                         <!-- Preset Buttons -->
                         <div class="grid grid-cols-3 gap-2 mb-3">
-                            <button id="preset-industrial" class="px-2 py-1.5 text-xs rounded border bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100 font-medium">Industrial</button>
-                            <button id="preset-residential" class="px-2 py-1.5 text-xs rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100 font-medium">Residential</button>
-                            <button id="preset-weak-grid" class="px-2 py-1.5 text-xs rounded border bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 font-medium">Weak Grid</button>
+                            <button id="preset-residential" class="px-2 py-1.5 .text-xs rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100 font-medium">Residential</button>
+                            <button id="preset-industrial" class="px-2 py-1.5 .text-xs rounded border bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100 font-medium">Industrial</button>
+                            <button id="preset-weak-grid" class="px-2 py-1.5 .text-xs rounded border bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 font-medium">Weak Grid</button>
                         </div>
 
                         <div class="grid grid-cols-2 gap-x-3 gap-y-1 compact">
                             <div class="slider-control">
                                 <div class="slider-label">
-                                    <label class="text-xs font-medium text-slate-600">Grid Voltage</label>
+                                    <label class=".text-xs font-medium .text-xslate-600">Grid Voltage(Line voltage for three-phase)</label>
                                     <span class="slider-value" id="gridVoltage-value">220V</span>
                                 </div>
                                 <input type="range" id="gridVoltage" min="110" max="380" step="10" value="220">
                             </div>
                             <div class="slider-control">
                                 <div class="slider-label">
-                                    <label class="text-xs font-medium text-slate-600">Grid Frequency</label>
+                                    <label class=".text-xs font-medium .text-xslate-600">Grid Frequency</label>
                                     <span class="slider-value" id="gridFrequency-value">50Hz</span>
                                 </div>
                                 <input type="range" id="gridFrequency" min="50" max="60" step="1" value="50">
                             </div>
                             <div class="slider-control">
                                 <div class="slider-label">
-                                    <label class="text-xs font-medium text-slate-600">Power</label>
-                                    <span class="slider-value" id="power-value">2000W</span>
+                                    <label class=".text-xs font-medium .text-xslate-600">Power</label>
+                                    <span class="slider-value" id="power-value">15000W</span>
                                 </div>
-                                <input type="range" id="power" min="0" max="10000" step="100" value="2000">
+                                <input type="range" id="power" min="0" max="15000" step="100" value="15000">
                             </div>
                             <div class="slider-control">
                                 <div class="slider-label">
-                                    <label class="text-xs font-medium text-slate-600">Grid Impedance</label>
-                                    <span class="slider-value" id="gridImpedance-value">0.2Ω</span>
+                                    <label class=".text-xs font-medium .text-xslate-600">Grid Impedance</label>
+                                    <span class="slider-value" id="gridImpedance-value">0.5Ω</span>
                                 </div>
-                                <input type="range" id="gridImpedance" min="0" max="1" step="0.01" value="0.2">
+                                <input type="range" id="gridImpedance" min="0" max="1" step="0.01" value="0.5">
                             </div>
                         </div>
 
                         <!-- Harmonics -->
                         <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 mt-3">
-                            <label class="text-xs font-medium text-slate-600 block mb-2">Harmonics Injection (%)</label>
+                            <label class=".text-xs font-medium .text-xslate-600 block mb-2">Harmonics Injection (%)</label>
                             <div class="grid grid-cols-3 gap-2">
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">3rd</label>
-                                        <span class="slider-value" id="harmonic3-value">5%</span>
+                                        <label class=".text-xs font-medium .text-xslate-600">3rd</label>
+                                        <span class="slider-value" id="harmonic3-value">1%</span>
                                     </div>
-                                    <input type="range" id="harmonic3" min="0" max="20" step="1" value="5">
+                                    <input type="range" id="harmonic3" min="0" max="5" step="0.1" value="1">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">5th</label>
-                                        <span class="slider-value" id="harmonic5-value">3%</span>
+                                        <label class=".text-xs font-medium .text-xslate-600">5th</label>
+                                        <span class="slider-value" id="harmonic5-value">0.5%</span>
                                     </div>
-                                    <input type="range" id="harmonic5" min="0" max="15" step="1" value="3">
+                                    <input type="range" id="harmonic5" min="0" max="5" step="0.1" value="0.5">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">7th</label>
-                                        <span class="slider-value" id="harmonic7-value">1%</span>
+                                        <label class=".text-xs font-medium .text-xslate-600">7th</label>
+                                        <span class="slider-value" id="harmonic7-value">0.1%</span>
                                     </div>
-                                    <input type="range" id="harmonic7" min="0" max="10" step="1" value="1">
+                                    <input type="range" id="harmonic7" min="0" max="5" step="0.1" value="0.3">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Power Control Parameters -->
                         <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 mt-3">
-                            <label class="text-xs font-medium text-slate-600 block mb-2">Power Control Parameters</label>
+                            <label class=".text-xs font-medium .text-xslate-600 block mb-2">Power Control Parameters</label>
                             <div class="grid grid-cols-2 gap-2">
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">Kp</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">Kp</label>
                                         <span class="slider-value" id="kp-value">0.00004</span>
                                     </div>
                                     <input type="range" id="kp" min="0" max="0.0001" step="0.00001" value="0.00004">
                                 </div>
                                 <div class="slider-control">
                                     <div class="slider-label">
-                                        <label class="text-xs font-medium text-slate-600">Ki</label>
+                                        <label class=".text-xs font-medium .text-xslate-600">Ki</label>
                                         <span class="slider-value" id="ki-value">0.8</span>
                                     </div>
                                     <input type="range" id="ki" min="0" max="2" step="0.1" value="0.8">
@@ -300,14 +300,14 @@
             <!-- Right Panel: Charts -->
             <div class="col-span-8 flex flex-col gap-4">
                 <!-- Grid & Inverter Voltage Chart -->
-                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 300px;">
-                    <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Grid & Inverter Voltage (V)</h3>
+                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 400px;">
+                    <h3 class=".text-xsm font-bold .text-xslate-600 mb-2 text-center">Grid & Inverter Voltage (V)</h3>
                     <div class="flex-1" id="voltage-chart"></div>
                 </div>
 
                 <!-- Inductor Voltage & Flux Chart -->
-                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 300px;">
-                    <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Inductor Voltage & Flux Linkage</h3>
+                <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col" style="height: 400px;">
+                    <h3 class=".text-xsm font-bold .text-xslate-600 mb-2 text-center">Inductor Voltage & Flux Linkage</h3>
                     <div class="flex-1" id="flux-chart"></div>
                 </div>
             </div>
@@ -318,16 +318,16 @@
             <!-- Left Panel: Material & Core Design -->
             <section class="col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                 <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 .text-xslate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
-                    <h2 class="font-semibold text-sm text-slate-700">Material & Core Design</h2>
+                    <h2 class="font-semibold .text-xsm .text-xslate-700">Material & Core Design</h2>
                 </div>
 
                 <div class="px-4 pt-4 pb-2 border-b border-slate-200">
                     <div class="slider-control">
                         <div class="slider-label">
-                            <label class="text-xs font-medium text-slate-600">Temperature</label>
+                            <label class=".text-xs font-medium .text-xslate-600">Temperature</label>
                             <span class="slider-value" id="temperature-value">25°C</span>
                         </div>
                         <input type="range" id="temperature" min="0" max="100" step="1" value="25">
@@ -343,13 +343,13 @@
             <section class="col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col" style="min-height: 500px;">
                 <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 .text-xslate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                         </svg>
-                        <h2 class="font-semibold text-sm text-slate-700">AI Analysis Results</h2>
+                        <h2 class="font-semibold .text-xsm .text-xslate-700">AI Analysis Results</h2>
                     </div>
-                    <div id="active-material-display" class="flex items-center gap-2 text-xs">
-                        <span class="text-slate-500">Showing B-H for:</span>
+                    <div id="active-material-display" class="flex items-center gap-2 .text-xs">
+                        <span class=".text-xslate-500">Showing B-H for:</span>
                         <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
                             <div id="active-material-color" class="w-2 h-2 rounded-full"></div>
                             <span id="active-material-name" class="font-semibold"></span>
@@ -360,19 +360,19 @@
                 <div class="p-4 grid grid-cols-2 gap-4 flex-1">
                     <!-- Core Loss Comparison -->
                     <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col">
-                        <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Core Loss Comparison (W/m³, Total W)</h3>
-                        <!-- <p class="text-xs text-slate-400 text-center mb-3">Click bar to view B-H curves</p> -->
+                        <h3 class=".text-xsm font-bold .text-xslate-600 mb-2 text-center">Core Loss Comparison (W/m³, Total W)</h3>
+                        <!-- <p class=".text-xs .text-xslate-400 text-center mb-3">Click bar to view B-H curves</p> -->
                         <div class="flex-1" id="loss-chart"></div>
                     </div>
 
                     <!-- B-H Charts -->
                     <div class="flex flex-col gap-4">
                         <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col flex-1">
-                            <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Magnetic Flux Density B (T)</h3>
+                            <h3 class=".text-xsm font-bold .text-xslate-600 mb-2 text-center">Magnetic Flux Density B (T)</h3>
                             <div class="flex-1" id="b-chart"></div>
                         </div>
                         <div class="bg-white border border-slate-100 rounded-lg p-4 shadow-sm flex flex-col flex-1">
-                            <h3 class="text-sm font-bold text-slate-600 mb-2 text-center">Field Strength H (A/m)</h3>
+                            <h3 class=".text-xsm font-bold .text-xslate-600 mb-2 text-center">Field Strength H (A/m)</h3>
                             <div class="flex-1" id="h-chart"></div>
                         </div>
                     </div>
@@ -387,14 +387,14 @@
             dcVoltage: 400,
             gridVoltage: 220,
             gridFrequency: 50,
-            power: 2000,
+            power: 15000,
             frequency: 75000,
             filterInductance: 1,
             filterCapacitance: 2,
-            gridImpedance: 0.2,
-            harmonic3: 5,
-            harmonic5: 3,
-            harmonic7: 1,
+            gridImpedance: 0.5,
+            harmonic3: 1,
+            harmonic5: 0.5,
+            harmonic7: 0.3,
             kp: 0.00004,
             ki: 0.8
         };
@@ -430,7 +430,36 @@
             const denominator = Math.PI * (R_m + r_m) * 1000;
             return numerator / denominator;
         }
+        // 【新增】通用材料参数自动计算函数：根据R自动算r、d，再根据Filter L算N
+function autoCalcMatParams(mat) {
+    if (mat.R <= 0) return; // R无有效值时不计算
+    const ranges = {
+        'r': { min: 0, max: 400 },
+        'd': { min: 0, max: 2000 },
+        'turns': { min: 5, max: 200 }
+    };
+    // 1. 按比例计算r、d推荐值：r=0.4*R，d=0.3*R
+    let recommended_r = 0.4 * mat.R;
+    let recommended_d = 0.3 * mat.R;
+    // 确保r < R（核心校验），并限制在范围内
+    mat.r = Math.max(ranges.r.min, Math.min(ranges.r.max, Math.min(recommended_r, mat.R - 1)));
+    mat.d = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
+
+    // 2. 有磁导率时，根据目标Filter L计算N（复用原有N计算逻辑）
+    if (mat.mu_r !== null && mat.mu_r !== undefined) {
+        const L_target = conditions.filterInductance / 1000; // 转换为H（目标电感：Filter L的当前值）
+        const mu_0 = 4 * Math.PI * 1e-7; // H/m
+        const R_m = mat.R / 1000; // m
+        const r_m = mat.r / 1000; // m
+        const d_m = mat.d / 1000; // m
         
+        // N计算公式：N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+        const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
+        const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
+        const recommended_N = denominator > 0 ? Math.sqrt(numerator / denominator) : 10; // 避免除零
+        mat.turns = Math.max(ranges.turns.min, Math.min(ranges.turns.max, Math.round(recommended_N)));
+    }
+}
         // 材料数据结构：R, r, d (mm), N (turns), mu_r (前四个材料)
         // 默认值计算：Ae = (R-r) * d / 100 (cm²), Le = π * (R+r) (mm)
         // Material 1: 原 Ae=150 cm², Le=100 mm -> R=50, r=20, d=500 (Ae=150, Le≈220)
@@ -439,10 +468,10 @@
         // Material 4: 原 Ae=200 cm², Le=150 mm -> R=50, r=20, d=667 (Ae=200, Le≈220)
         // Material 5: 原 Ae=160 cm², Le=110 mm -> R=50, r=20, d=533 (Ae=160, Le≈220)
         let materials = [
-            { id: 1, name: '3C90', R: 0, r: 0, d: 0, turns: 20, mu_r: 2300, baseLossFactor: 1.2, color: '#3b82f6' },
-            { id: 2, name: '3C94', R: 0, r: 0, d: 0, turns: 15, mu_r: 4000, baseLossFactor: 0.8, color: '#10b981' },
-            { id: 3, name: '3E6', R: 0, r: 0, d: 0, turns: 25, mu_r: 6000, baseLossFactor: 1.5, color: '#f59e0b' },
-            { id: 4, name: '3F4', R: 0, r: 0, d: 0, turns: 30, mu_r: 1000, baseLossFactor: 2.1, color: '#ef4444' },
+            { id: 1, name: '3C90', R: 200, r: 0, d: 0, turns: 0, mu_r: 2300, baseLossFactor: 1.2, color: '#3b82f6' },
+            { id: 2, name: '3C94', R: 200, r: 0, d: 0, turns: 0, mu_r: 4000, baseLossFactor: 0.8, color: '#10b981' },
+            { id: 3, name: '3E6', R: 200, r: 0, d: 0, turns: 0, mu_r: 6000, baseLossFactor: 1.5, color: '#f59e0b' },
+            { id: 4, name: '3F4', R: 350, r: 0, d: 0, turns: 0, mu_r: 1000, baseLossFactor: 2.1, color: '#ef4444' },
             { id: 5, name: 'Other Material', R: 0, r: 0, d: 0, turns: 22, mu_r: null, baseLossFactor: 1.0, color: '#8b5cf6' }
         ];
         
@@ -548,8 +577,8 @@
             // --- 4. 仿真步长配置 ---
             const T_grid = 1 / f_grid;
             const T_sw = 1 / f_sw;
-            const numGridCycles = 10; 
-            const numStepsPerSwCycle = 200; 
+            const numGridCycles = 5; 
+            const numStepsPerSwCycle = 100; 
             const dt = T_sw / numStepsPerSwCycle;
             const totalTime = numGridCycles * T_grid;
             const numSteps = Math.floor(totalTime / dt);
@@ -696,9 +725,6 @@
                 for (let i = 0; i < loopPhases; i++) {
                     const v_g = getGridVoltage(t, i);
 
-                    // 4. 计算共模电压 (关键修正!)
-                    // 对于单相全桥，不需要减共模（或者说共模相互抵消），直接差分
-                    // 对于三相三线，必须减去 V_NO
                    
                     const v_inv = getPWMOutput(t, initialModulation, i, m_adjust);// 对于三相三线，必须减去 V_NO
 
@@ -759,32 +785,53 @@
   const baseB = (voltage / (material.ae * material.turns * freq)) * 1000000;
   const baseH = (power / voltage) * material.turns;
 
-            /*
-  for (let i = 0; i < points; i++) {
-    const t = i / points;
-    const angle = t * 2 * Math.PI;
-    const h3 = (harmonics.h3 / 100) * Math.sin(3 * angle);
-    const h5 = (harmonics.h5 / 100) * Math.sin(5 * angle);
-    const h7 = (harmonics.h7 / 100) * Math.sin(7 * angle);
-    const totalHarmonics = h3 + h5 + h7;
 
-    const inputWave = Math.sin(angle) * voltage + (voltage * totalHarmonics);
-    const outputWave = Math.sin(angle + 0.2) * voltage * 0.9;
-    const bVal = baseB * (Math.sin(angle - 0.1) + totalHarmonics * 0.5) + (Math.random() * 0.01);
-    const hVal = baseH * (Math.sin(angle) + totalHarmonics * 0.2) + (Math.sin(angle * 10) * 0.1 * baseH);
-
-    data.push({
-      time: i,
-      inputVoltage: inputWave,
-      outputVoltage: outputWave,
-      B: bVal,
-      H: hVal,
-    });
-  }
-            */
   return data;
         }
 
+// 积分法计算磁芯损耗：B-H积分法（替换斯坦梅森公式）
+// 参数：
+//   B_seq: 磁通密度序列，单位T（特斯拉），与H_seq长度一致
+//   H_seq: 磁场强度序列，单位A/m（安/米），与B_seq长度一致
+//   time_seq: 对应时间序列，单位s（秒），与B/H长度一致
+//   volume_m3: 磁芯体积，单位m³
+// 返回：{ loss_per_volume: 单位体积损耗(W/m³), loss_total: 总损耗(W) }
+function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
+    // 边界校验：数据长度一致、非空、体积有效
+    if (!B_seq || !H_seq || !time_seq || 
+        B_seq.length !== H_seq.length || 
+        H_seq.length !== time_seq.length || 
+        B_seq.length < 2 || volume_m3 <= 0) {
+        return { loss_per_volume: 0, loss_total: 0 };
+    }
+
+    const n = B_seq.length;
+    let integral = 0; // 存储∫H·dB/dt dt的积分结果
+    const T = time_seq[n - 1] - time_seq[0]; // 时间周期（s）
+    if (T <= 0) return { loss_per_volume: 0, loss_total: 0 };
+
+    // 梯形法数值积分：遍历离散点计算H·dB/dt，并积分
+    for (let i = 1; i < n; i++) {
+        const dt = time_seq[i] - time_seq[i - 1]; // 时间步长
+        const dB = B_seq[i] - B_seq[i - 1];       // B的变化量
+        if (dt === 0) continue; // 避免除零
+
+        const dBdt = dB / dt; // dB/dt
+        // 梯形法：取相邻两个点的H平均值
+        const H_avg = (H_seq[i] + H_seq[i - 1]) / 2;
+        // 积分微元：H_avg * dBdt * dt = H_avg * dB
+        integral += H_avg * dBdt * dt;
+    }
+
+    // 计算单位体积损耗：1/T * |积分结果|（取绝对值，避免方向影响）
+    const loss_per_volume = Math.abs(integral) / T;
+    // 计算总损耗：单位体积损耗 * 磁芯体积
+    const loss_total = loss_per_volume * volume_m3;
+
+    return { loss_per_volume, loss_total };
+}
+
+        
         function calculateLosses(materials, freq, voltage, selectedMatIds) {
   return materials
     .filter(m => selectedMatIds.includes(m.id))
@@ -946,18 +993,6 @@
         // Initialize preset buttons
         function initPresets() {
             document.getElementById('preset-industrial').addEventListener('click', () => {
-                conditions.gridVoltage = 220;
-                conditions.gridFrequency = 50;
-                conditions.gridImpedance = 0.5;
-                conditions.power = 15000;
-                conditions.harmonic3 = 1;
-                conditions.harmonic5 = 0.5;
-                conditions.harmonic7 = 0.3;
-                updateAllSliders();
-                updateCharts();
-            });
-
-            document.getElementById('preset-residential').addEventListener('click', () => {
                 conditions.gridVoltage = 230;
                 conditions.gridFrequency = 50;
                 conditions.gridImpedance = 1.0;
@@ -965,6 +1000,19 @@
                 conditions.harmonic3 = 2;
                 conditions.harmonic5 = 1.5;
                 conditions.harmonic7 = 1;
+                updateAllSliders();
+                updateCharts();
+            });
+
+            document.getElementById('preset-residential').addEventListener('click', () => {
+      
+                conditions.gridVoltage = 220;
+                conditions.gridFrequency = 50;
+                conditions.gridImpedance = 0.5;
+                conditions.power = 15000;
+                conditions.harmonic3 = 1;
+                conditions.harmonic5 = 0.5;
+                conditions.harmonic7 = 0.3;
                 updateAllSliders();
                 updateCharts();
             });
@@ -1023,49 +1071,49 @@
                         <div class="w-3 h-3 rounded-full flex-shrink-0 flex items-center justify-center" style="background-color: ${mat.color};">
                             ${isSelected ? '<svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
                         </div>
-                        <span class="text-xs font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-700'}">${mat.name}</span>
+                        <span class=".text-xs font-semibold ${isSelected ? 'text-blue-700' : '.text-xslate-700'}">${mat.name}</span>
                     </div>
                     ${isSelected ? `
                         <div class="space-y-2 mt-2">
                             <div class="flex flex-wrap gap-2">
                                 <div class="flex items-center gap-1">
-                                    <label class="text-xs text-slate-600 whitespace-nowrap">R:</label>
-                                    <input type="number" class="material-R w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                    <label class=".text-xs .text-xslate-600 whitespace-nowrap">R:</label>
+                                    <input type="number" class="material-R w-16 px-2 py-1 bg-white border border-slate-300 rounded .text-xs focus:outline-none focus:border-blue-500" 
                                            data-id="${mat.id}" value="${mat.R}" min="0" max="500" step="1" onclick="event.stopPropagation()">
-                                    <span class="text-xs text-slate-500">mm</span>
+                                    <span class=".text-xs .text-xslate-500">mm</span>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <label class="text-xs text-slate-600 whitespace-nowrap">r:</label>
-                                    <input type="number" class="material-r w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                    <label class=".text-xs .text-xslate-600 whitespace-nowrap">r:</label>
+                                    <input type="number" class="material-r w-16 px-2 py-1 bg-white border border-slate-300 rounded .text-xs focus:outline-none focus:border-blue-500" 
                                            data-id="${mat.id}" value="${mat.r}" min="0" max="400" step="1" onclick="event.stopPropagation()">
-                                    <span class="text-xs text-slate-500">mm</span>
+                                    <span class=".text-xs .text-xslate-500">mm</span>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <label class="text-xs text-slate-600 whitespace-nowrap">d:</label>
-                                    <input type="number" class="material-d w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                    <label class=".text-xs .text-xslate-600 whitespace-nowrap">d:</label>
+                                    <input type="number" class="material-d w-16 px-2 py-1 bg-white border border-slate-300 rounded .text-xs focus:outline-none focus:border-blue-500" 
                                            data-id="${mat.id}" value="${mat.d}" min="0" max="2000" step="10" onclick="event.stopPropagation()">
-                                    <span class="text-xs text-slate-500">mm</span>
+                                    <span class=".text-xs .text-xslate-500">mm</span>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <label class="text-xs text-slate-600 whitespace-nowrap">N:</label>
-                                    <input type="number" class="material-turns w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500" 
+                                    <label class=".text-xs .text-xslate-600 whitespace-nowrap">N:</label>
+                                    <input type="number" class="material-turns w-16 px-2 py-1 bg-white border border-slate-300 rounded .text-xs focus:outline-none focus:border-blue-500" 
                                            data-id="${mat.id}" value="${mat.turns}" min="5" max="200" step="1" onclick="event.stopPropagation()">
-                                    <span class="text-xs text-slate-500">turns</span>
+                                    <span class=".text-xs .text-xslate-500">turns</span>
                                 </div>
                             </div>
-                            <div class="flex flex-wrap gap-3 text-xs text-slate-600 pt-1 border-t border-slate-200">
+                            <div class="flex flex-wrap gap-3 .text-xs .text-xslate-600 pt-1 border-t border-slate-200">
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">Ae:</span>
-                                    <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                    <span class=".text-xslate-700">${mat.ae.toFixed(1)} cm²</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">Le:</span>
-                                    <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                    <span class=".text-xslate-700">${mat.le.toFixed(1)} mm</span>
                                 </div>
                                 ${mat.mu_r !== null && mat.mu_r !== undefined ? `
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">L:</span>
-                                    <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                    <span class=".text-xslate-700">${(mat.L * 1000).toFixed(3)} mH</span>
                                 </div>
                                 ` : ''}
                             </div>
@@ -1113,69 +1161,42 @@
                         
                         // 如果是R改变，触发自动计算r和d
                         if (field === 'R' && value > 0) {
-                            // 临时更新R以计算推荐值
-                            const oldR = mat.R;
-                            mat.R = value;
-                            
-                            // 计算推荐值：r = 0.4R, d = 0.3R
-                            const ranges = {
-                                'r': { min: 0, max: 400 },
-                                'd': { min: 0, max: 2000 }
-                            };
-                            const recommended_r = 0.4 * value;
-                            const recommended_d = 0.3 * value;
-                            const r_final = Math.max(ranges.r.min, Math.min(ranges.r.max, recommended_r));
-                            const d_final = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
-                            
-                            mat.r = r_final;
-                            mat.d = d_final;
-                            
-                            // 更新r和d的输入框
-                            const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
-                            const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
-                            if (rInput && rInput !== e.target) rInput.value = r_final.toFixed(1);
-                            if (dInput && dInput !== e.target) dInput.value = d_final.toFixed(1);
-                            
-                            // 如果L已经计算出来，计算N的推荐值
-                            if (mat.mu_r !== null && mat.mu_r !== undefined) {
-                                const L_target = conditions.filterInductance / 1000; // 转换为H
-                                const mu_0 = 4 * Math.PI * 1e-7; // H/m
-                                const R_m = mat.R / 1000; // m
-                                const r_m = mat.r / 1000; // m
-                                const d_m = mat.d / 1000; // m
-                                
-                                // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
-                                const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
-                                const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
-                                const recommended_N = Math.sqrt(numerator / denominator);
-                                const N_final = Math.max(5, Math.min(200, Math.round(recommended_N)));
-                                mat.turns = N_final;
-                                
-                                const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
-                                if (nInput) nInput.value = N_final;
-                            }
-                        } else {
-                            mat[field] = value;
+    // 验证 R > 0 且 R > r
+    if (numValue <= mat.r) numValue = mat.r + 1;
+    mat.R = Math.max(1, numValue); // 确保R至少为1，避免无意义值
+    const input = document.querySelector(`.material-R[data-id="${id}"]`);
+    if (input) input.value = mat.R;
+    
+    // 【关键】调用通用自动计算函数，更新r、d、N
+    autoCalcMatParams(mat);
+    
+    // 更新r、d、N输入框（原有代码保留，仅移除重复计算）
+    const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
+    const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
+    const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
+    if (rInput) rInput.value = mat.r;
+    if (dInput) dInput.value = mat.d;
+    if (nInput) nInput.value = mat.turns;
                         }
                         
                         // 更新显示的计算值
                         const matDiv = e.target.closest('[data-material-id]');
                         if (matDiv) {
-                            const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                            const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
                             if (calcDiv) {
                                 calcDiv.innerHTML = `
                                     <div class="flex items-center gap-1">
                                         <span class="font-semibold">Ae:</span>
-                                        <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                        <span class=".text-xslate-700">${mat.ae.toFixed(1)} cm²</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span class="font-semibold">Le:</span>
-                                        <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                        <span class=".text-xslate-700">${mat.le.toFixed(1)} mm</span>
                                     </div>
                                     ${mat.mu_r !== null && mat.mu_r !== undefined ? `
                                     <div class="flex items-center gap-1">
                                         <span class="font-semibold">L:</span>
-                                        <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                        <span class=".text-xslate-700">${(mat.L * 1000).toFixed(3)} mH</span>
                                     </div>
                                     ` : ''}
                                 `;
@@ -1191,10 +1212,10 @@
                 const structureDiv = document.createElement('div');
                 structureDiv.className = 'mt-4 border-t border-slate-200 pt-4';
                 structureDiv.innerHTML = `
-                    <h3 class="text-xs font-semibold text-slate-700 mb-3 mt-1">Inductor Structure</h3>
+                    <h3 class=".text-xs font-semibold .text-xslate-700 mb-3 mt-1">Inductor Structure</h3>
                     <div class="bg-white rounded-lg border border-slate-200 p-2 flex justify-center" style="padding-top: 0;">
                         <svg viewBox="0 0 300 240" preserveAspectRatio="xMidYMid meet" style="max-width: 50%; max-height: 50%;">
-                            <image href="/static/images/inductor.png" x="0" y="0" width="300" height="240" preserveAspectRatio="xMidYMid meet"></image>
+                            <image href="/static/images/inductor.jpg" x="0" y="0" width="300" height="240" preserveAspectRatio="xMidYMid meet"></image>
                         </svg>
                     </div>
                 `;
@@ -1257,20 +1278,20 @@
                     // 更新显示的计算值
                     const matDiv = document.querySelector(`[data-material-id="${mat.id}"]`);
                     if (matDiv) {
-                        const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                        const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
                         if (calcDiv) {
                             calcDiv.innerHTML = `
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">Ae:</span>
-                                    <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                    <span class=".text-xslate-700">${mat.ae.toFixed(1)} cm²</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">Le:</span>
-                                    <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                    <span class=".text-xslate-700">${mat.le.toFixed(1)} mm</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <span class="font-semibold">L:</span>
-                                    <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                    <span class=".text-xslate-700">${(mat.L * 1000).toFixed(3)} mH</span>
                                 </div>
                             `;
                         }
@@ -1394,21 +1415,21 @@
                 // 更新显示的计算值
                 const matDiv = document.querySelector(`[data-material-id="${id}"]`);
                 if (matDiv) {
-                    const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3.text-xs');
+                    const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
                     if (calcDiv) {
                         calcDiv.innerHTML = `
                             <div class="flex items-center gap-1">
                                 <span class="font-semibold">Ae:</span>
-                                <span class="text-slate-700">${mat.ae.toFixed(1)} cm²</span>
+                                <span class=".text-xslate-700">${mat.ae.toFixed(1)} cm²</span>
                             </div>
                             <div class="flex items-center gap-1">
                                 <span class="font-semibold">Le:</span>
-                                <span class="text-slate-700">${mat.le.toFixed(1)} mm</span>
+                                <span class=".text-xslate-700">${mat.le.toFixed(1)} mm</span>
                             </div>
                             ${mat.mu_r !== null && mat.mu_r !== undefined ? `
                             <div class="flex items-center gap-1">
                                 <span class="font-semibold">L:</span>
-                                <span class="text-slate-700">${(mat.L * 1000).toFixed(3)} mH</span>
+                                <span class=".text-xslate-700">${(mat.L * 1000).toFixed(3)} mH</span>
                             </div>
                             ` : ''}
                         `;
@@ -1608,36 +1629,56 @@
         
         // 从预测结果更新Loss图表
         function updateLossChartFromPredictions() {
-            const lossData = materials
-                .filter(m => selectedMaterialIds.includes(m.id))
-                .map(m => {
-                    let loss_total = 0;
-                    if (predictionResults[m.id] && predictionResults[m.id].core_loss !== undefined) {
-                        loss_total = predictionResults[m.id].core_loss;
-                    } else {
-                        // 如果没有预测结果，使用默认计算
-                        const simulatedB = (conditions.dcVoltage / (m.ae * m.turns * conditions.frequency));
-                        loss_total = (m.baseLossFactor * Math.pow(conditions.frequency/10000, 1.5) * Math.pow(simulatedB, 2.0));
-                    }
-                    
-                    // 计算体积：Ae (cm²) * Le (mm) / 10 = cm³，然后转换为 m³
-                    const volume_cm3 = m.ae * m.le / 10; // cm³
-                    const volume_m3 = volume_cm3 / 1e6; // m³
-                    
-                    // 将loss除以体积得到 W/m³
-                    const loss_per_volume = volume_m3 > 0 ? loss_total / volume_m3 : 0;
-                    
-                    return {
-                        id: m.id,
-                        name: m.name,
-                        loss: loss_per_volume,
-                        loss_total: loss_total,
-                        color: m.color
-                    };
-                });
-            
-            updateLossChart(lossData);
-        }
+    // 边界校验：有Flux选中、有时间数据、有预测结果
+    if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null || !originalTimeData || Object.keys(predictionResults).length === 0) {
+        const lossData = calculateLosses(materials, conditions.frequency, conditions.dcVoltage, selectedMaterialIds);
+        updateLossChart(lossData);
+        return;
+    }
+
+    const lossData = materials
+        .filter(m => selectedMaterialIds.includes(m.id))
+        .map(m => {
+            // 1. 计算磁芯体积（复用原有正确逻辑）
+            const volume_cm3 = m.ae * m.le / 10; // cm³
+            const volume_m3 = volume_cm3 / 1e6; // m³
+            if (volume_m3 <= 0) {
+                return { id: m.id, name: m.name, loss: 0, loss_total: 0, color: m.color };
+            }
+
+            // 2. 获取当前材料的预测H序列
+            const predResult = predictionResults[m.id];
+            if (!predResult || !predResult.H_pred || predResult.H_pred.length === 0) {
+                return { id: m.id, name: m.name, loss: 0, loss_total: 0, color: m.color };
+            }
+
+            // 3. 重新计算当前材料的B序列（与H序列严格对应，单位T）
+            const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+            const Ae_m2 = m.ae / 10000; // cm² → m²
+            const N = m.turns;
+            const B_seq = fluxValues.map(flux_Wb => flux_Wb / Ae_m2 / N); // 单位：T
+
+            // 4. 获取对应时间序列（单位s）
+            const time_seq = originalTimeData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
+
+            // 5. 截取H序列（保证与B/time长度一致）
+            const H_seq = predResult.H_pred.slice(0, B_seq.length); // 单位：A/m
+
+            // 6. 核心：调用积分法计算损耗（替换斯坦梅森公式）
+            const { loss_per_volume, loss_total } = calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3);
+
+            // 7. 格式化返回（保留2位小数，与原有显示一致）
+            return {
+                id: m.id,
+                name: m.name,
+                loss: parseFloat(loss_per_volume.toFixed(2)),
+                loss_total: parseFloat(loss_total.toFixed(2)),
+                color: m.color
+            };
+        });
+
+    updateLossChart(lossData);
+}
 
         function updateActiveMaterialDisplay() {
             const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
@@ -1653,14 +1694,14 @@
                 ).join('');
                 
                 displayElement.innerHTML = `
-                    <span class="text-slate-500">Showing B-H for:</span>
+                    <span class=".text-xslate-500">Showing B-H for:</span>
                     <div class="flex items-center gap-2 flex-wrap">
                         ${materialsHtml}
                     </div>
                 `;
             } else {
                 displayElement.innerHTML = `
-                    <span class="text-slate-500">No active materials</span>
+                    <span class=".text-xslate-500">No active materials</span>
                 `;
             }
         }
@@ -2695,6 +2736,16 @@
             initPresets();
             initMaterials();
             updateCharts();
+                // 【新增】初始化核心步骤：遍历所有材料，根据初始R自动计算r、d、N
+    materials.forEach(mat => {
+        if (mat.R > 0) { // 仅对有初始R有效值的材料计算
+            autoCalcMatParams(mat);
+        }
+    });
+    // 重新初始化材料列表，渲染计算后的r、d、N到输入框
+    initMaterials();
+    // 初始化更新图表，触发基础磁损计算（无需Flux选择）
+    updateCharts();
         });
     </script>
 </body>

@@ -403,70 +403,70 @@
         let temperature = 25;
         let isResizePaused = false;
 
-        // 计算函数
+        // Calculation functions
         function calculateAe(R, r, d) {
-            // R, r, d 单位都是 mm，返回 cm²
-            return (R - r) * d / 100; // 转换为 cm²
+            // R, r, d in mm, returns cm²
+            return (R - r) * d / 100; // Convert to cm²
         }
         
         function calculateLe(R, r) {
-            // R, r 单位都是 mm，返回 mm
+            // R, r in mm, returns mm
             return Math.PI * (R + r);
         }
         
         function calculateL(R, r, d, N, mu_r) {
-            // R, r, d 单位都是 mm，N 是匝数，mu_r 是相对磁导率
-            // 返回电感值 L（单位：H）
-            // 按照用户公式：L = μ₀ * μᵣ * N² * (R-r) * d / (π * (R+r) * 1000)
-            // 其中 R, r, d 需要转换成 m 进行计算
+            // R, r, d in mm, N is turns, mu_r is relative permeability
+            // Returns inductance L (unit: H)
+            // Formula: L = μ₀ * μᵣ * N² * (R-r) * d / (π * (R+r) * 1000)
+            // R, r, d need to be converted to m
             const mu_0 = 4 * Math.PI * 1e-7; // H/m
-            // 转换为米
+            // Convert to meters
             const R_m = R / 1000; // m
             const r_m = r / 1000; // m
             const d_m = d / 1000; // m
             // L = μ₀ * μᵣ * N² * (R-r) * d / (π * (R+r) * 1000)
-            // 注意：公式中的 1000 是单位转换因子
+            // Note: 1000 in formula is unit conversion factor
             const numerator = mu_0 * mu_r * N * N * (R_m - r_m) * d_m;
             const denominator = Math.PI * (R_m + r_m) * 1000;
             return numerator / denominator;
         }
-        // 【新增】通用材料参数自动计算函数：根据R自动算r、d，再根据Filter L算N
+        // Material parameter auto-calculation function: calculate r, d from R, then N from Filter L
 function autoCalcMatParams(mat) {
-    if (mat.R <= 0) return; // R无有效值时不计算
+    if (mat.R <= 0) return; // Skip if R has no valid value
     const ranges = {
         'r': { min: 0, max: 400 },
         'd': { min: 0, max: 2000 },
         'turns': { min: 5, max: 200 }
     };
-    // 1. 按比例计算r、d推荐值：r=0.4*R，d=0.3*R
+    // 1. Calculate recommended r, d by ratio: r=0.4*R, d=0.3*R
     let recommended_r = 0.4 * mat.R;
     let recommended_d = 0.3 * mat.R;
-    // 确保r < R（核心校验），并限制在范围内
+    // Ensure r < R (core check) and limit within range
     mat.r = Math.max(ranges.r.min, Math.min(ranges.r.max, Math.min(recommended_r, mat.R - 1)));
     mat.d = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
 
-    // 2. 有磁导率时，根据目标Filter L计算N（复用原有N计算逻辑）
+    // 2. If has permeability, calculate N from target Filter L (reuse existing N calculation logic)
     if (mat.mu_r !== null && mat.mu_r !== undefined) {
-        const L_target = conditions.filterInductance / 1000; // 转换为H（目标电感：Filter L的当前值）
+        const L_target = conditions.filterInductance / 1000; // Convert to H (target inductance: current Filter L value)
         const mu_0 = 4 * Math.PI * 1e-7; // H/m
         const R_m = mat.R / 1000; // m
         const r_m = mat.r / 1000; // m
         const d_m = mat.d / 1000; // m
         
-        // N计算公式：N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
+        // N calculation formula: N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
         const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
         const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
-        const recommended_N = denominator > 0 ? Math.sqrt(numerator / denominator) : 10; // 避免除零
+        const recommended_N = denominator > 0 ? Math.sqrt(numerator / denominator) : 10; // Avoid division by zero
         mat.turns = Math.max(ranges.turns.min, Math.min(ranges.turns.max, Math.round(recommended_N)));
     }
 }
-        // 材料数据结构：R, r, d (mm), N (turns), mu_r (前四个材料)
-        // 默认值计算：Ae = (R-r) * d / 100 (cm²), Le = π * (R+r) (mm)
-        // Material 1: 原 Ae=150 cm², Le=100 mm -> R=50, r=20, d=500 (Ae=150, Le≈220)
-        // Material 2: 原 Ae=120 cm², Le=80 mm -> R=40, r=20, d=600 (Ae=120, Le≈188)
-        // Material 3: 原 Ae=180 cm², Le=120 mm -> R=60, r=30, d=600 (Ae=180, Le≈283)
-        // Material 4: 原 Ae=200 cm², Le=150 mm -> R=50, r=20, d=667 (Ae=200, Le≈220)
-        // Material 5: 原 Ae=160 cm², Le=110 mm -> R=50, r=20, d=533 (Ae=160, Le≈220)
+        // Material data structure: R, r, d (mm), N (turns), mu_r (first four materials)
+        // Default calculation: Ae = (R-r) * d / 100 (cm²), Le = π * (R+r) (mm)
+        // Material 1: original Ae=150 cm², Le=100 mm -> R=50, r=20, d=500 (Ae=150, Le≈220)
+        // Material 2: original Ae=120 cm², Le=80 mm -> R=40, r=20, d=600 (Ae=120, Le≈188)
+        // Material 3: original Ae=180 cm², Le=120 mm -> R=60, r=30, d=600 (Ae=180, Le≈283)
+        // Material 4: original Ae=200 cm², Le=150 mm -> R=50, r=20, d=667 (Ae=200, Le≈220)
+        // Material 5: original Ae=160 cm², Le=110 mm -> R=50, r=20, d=533 (Ae=160, Le≈220)
         let materials = [
             { id: 1, name: '3C90', R: 200, r: 0, d: 0, turns: 0, mu_r: 2300, baseLossFactor: 1.2, color: '#3b82f6' },
             { id: 2, name: '3C94', R: 200, r: 0, d: 0, turns: 0, mu_r: 4000, baseLossFactor: 0.8, color: '#10b981' },
@@ -475,7 +475,7 @@ function autoCalcMatParams(mat) {
             { id: 5, name: 'Other Material', R: 0, r: 0, d: 0, turns: 22, mu_r: null, baseLossFactor: 1.0, color: '#8b5cf6' }
         ];
         
-        // 为每个材料添加计算属性（动态计算）
+        // Add calculated properties for each material (dynamic calculation)
         materials.forEach(mat => {
             Object.defineProperty(mat, 'ae', {
                 get: function() { return calculateAe(this.R, this.r, this.d); },
@@ -497,16 +497,16 @@ function autoCalcMatParams(mat) {
         });
 
         let selectedMaterialIds = [1, 2];
-        let activeMatIds = [1, 2]; // 改为数组，存储所有激活的材料ID，默认选中前两个
+        let activeMatIds = [1, 2]; // Changed to array, stores all active material IDs, default first two selected
         
-        // 存储预测结果
+        // Store prediction results
         let predictionResults = {}; // {materialId: {H_pred: [], core_loss: number}}
 
         // Listen for resize pause messages
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'pauseResize') {
                 isResizePaused = event.data.pause;
-                // 如果恢复，清除防抖定时器
+                // If resumed, clear debounce timer
                 if (!isResizePaused) {
                     clearTimeout(resizeUpdateTimeout);
                     resizeUpdateTimeout = null;
@@ -531,26 +531,21 @@ function autoCalcMatParams(mat) {
                 ki
             } = conditions;
 
-            // --- 1. 参数验证 ---
-            if (L_mH <= 0) throw new Error("滤波电感值必须大于0（mH）");
-            if (gridImpedance < 0) throw new Error("电网阻抗不能为负数");
-            if (dcVoltage <= 0 || gridVoltage <= 0) throw new Error("直流/电网电压必须大于0");
-            if (switchingFreq <= 0 || gridFrequency <= 0) throw new Error("频率必须大于0");
+            // --- 1. Parameter validation ---
+            if (L_mH < 0) throw new Error("Filter inductance cannot be negative (mH)");
+            if (gridImpedance < 0) throw new Error("Grid impedance cannot be negative");
+            if (dcVoltage <= 0 || gridVoltage <= 0) throw new Error("DC/Grid voltage must be greater than 0");
+            if (switchingFreq <= 0 || gridFrequency <= 0) throw new Error("Frequency must be greater than 0");
 
-            // --- 2. 基础物理参数 ---
-            const L = L_mH * 1e-3;
-            const f_grid = gridFrequency;
-            const f_sw = switchingFreq;
-            const V_dc = dcVoltage;
-            const omega_grid = 2 * Math.PI * f_grid;
-            const isThreePhase = topology.includes('3Phase');
+            // --- 2. Basic physical parameters ---
+            const L = Math.max(L_mH * 1e-3, 1e-9); // Avoid division by zero, minimum 1nH
 
-            // 计算电压峰值
+            // Calculate voltage peak
             const V_grid_peak = isThreePhase
-                ? gridVoltage * Math.sqrt(2)/Math.sqrt(3)  // 线电压有效值 -> 相电压峰值
-                : gridVoltage * Math.sqrt(2);               // 单相有效值 -> 峰值
+                ? gridVoltage * Math.sqrt(2)/Math.sqrt(3)  // Line voltage RMS -> Phase voltage peak
+                : gridVoltage * Math.sqrt(2);               // Single-phase RMS -> Peak
 
-            // --- 3. 拓扑配置 ---
+            // --- 3. Topology configuration ---
             let voltageGain, numPhases, isThreeLevel;
             switch (topology) {
                 case 'Single-Phase-full-bridge':
@@ -574,87 +569,40 @@ function autoCalcMatParams(mat) {
                     isThreeLevel = false;
             }
 
-            // --- 4. 仿真步长配置 ---
-            const T_grid = 1 / f_grid;
-            const T_sw = 1 / f_sw;
-            const numGridCycles = 5; 
-            const numStepsPerSwCycle = 100; 
-            const dt = T_sw / numStepsPerSwCycle;
-            const totalTime = numGridCycles * T_grid;
-            const numSteps = Math.floor(totalTime / dt);
+            // --- 4. Simulation step configuration ---
 
-            // --- 5. 状态变量 ---
-            const state = {
-                i_L: isThreePhase ? [0, 0, 0] : 0,
-                flux_L: isThreePhase ? [0, 0, 0] : 0, // 磁链状态
-                powerIntegral: 0,
-                lastFluxResetTime: 0,
-                powerIntegralLimit: 5000,
-                lastError: 0
-            };
+            // --- 5. State variables ---
+                flux_L: isThreePhase ? [0, 0, 0] : 0, // Flux linkage state
 
-            // --- 6. 预计算随机相位 ---
-            const harmonicPhases = {
-                3: Math.random() * 2 * Math.PI,
-                5: Math.random() * 2 * Math.PI,
-                7: Math.random() * 2 * Math.PI
-            };
+            // --- 6. Pre-calculate random phases ---
 
-            // --- 7. 核心函数 ---
+            // --- 7. Core functions ---
 
-            function getGridVoltage(t, phaseIndex = 0) {
-                const phaseShift = isThreePhase ? (phaseIndex * -2 * Math.PI / 3) : 0; 
-                const theta = omega_grid * t + phaseShift;
+                // Fundamental wave
 
-                // 基波
-                let v = V_grid_peak * Math.sin(theta);
+                // Harmonics
 
-                // 谐波
-                if (harmonic3) v += (harmonic3 / 100) * V_grid_peak * Math.sin(3 * theta + harmonicPhases[3]);
-                if (harmonic5) v += (harmonic5 / 100) * V_grid_peak * Math.sin(5 * theta + harmonicPhases[5]);
-                if (harmonic7) v += (harmonic7 / 100) * V_grid_peak * Math.sin(7 * theta + harmonicPhases[7]);
+                // 1. Calculate modulation wave
 
-                return v;
-            }
+                // 2. Generate triangle carrier
 
-            function getPWMOutput(t, modulationIndex, phaseIndex = 0, powerCtrlOutput = 0) {
-                const phaseShift = isThreePhase ? (phaseIndex * -2 * Math.PI / 3) : 0;
+                // 3. PWM comparison logic
+                    // Three-level PD-PWM logic
+                    // Upper carrier: [0, 1], Lower carrier: [-1, 0]
+                    // Both carriers have same phase (Phase Disposition)
                 
-                // 1. 计算调制波
-                let m = modulationIndex + powerCtrlOutput; 
-                m = Math.max(-1.15, Math.min(1.15, m));
+                    const carrierUp = triangle0to1;       // 0 to 1
+                    const carrierDown = triangle0to1 - 1; // -1 to 0
                 
-                const reference = m * Math.sin(omega_grid * t + phaseShift);
-
-                // 2. 生成三角载波
-                const cycleProgress = (t % T_sw) / T_sw; 
-             
-                let triangle0to1;
-                if (cycleProgress < 0.5) {
-                    triangle0to1 = cycleProgress * 2; 
-                } else {
-                    triangle0to1 = 2 - cycleProgress * 2; 
-                }
-
-                // 3. PWM 比较逻辑
-                if (isThreeLevel) {
-                    // 三电平 PD-PWM 逻辑
-                    // 上载波: [0, 1], 下载波: [-1, 0]
-                    // 两个载波相位相同 (Phase Disposition)
-                
-                    const carrierUp = triangle0to1;       // 0 到 1
-                    const carrierDown = triangle0to1 - 1; // -1 到 0
-                
-                    if (reference >= carrierUp) {
-                        return V_dc/2;  // 输出正母线电压
+                        return V_dc/2;  // Output positive bus voltage
                     } else if (reference <= carrierDown) {
-                        return -V_dc/2; // 输出负母线电压
+                        return -V_dc/2; // Output negative bus voltage
                     } else {
-                        return 0;     // 输出中点电压 (0V)
+                        return 0;     // Output neutral point voltage (0V)
                     }
                 } else {
-                    // 两电平逻辑 (兼容旧逻辑)
-                    // 将 [0, 1] 映射到 [-1, 1]
+                    // Two-level logic (compatible with old logic)
+                    // Map [0, 1] to [-1, 1]
 
                     const V_half_dc = V_dc / 2; 
                     const carrierBipolar = triangle0to1 * 2 - 1;
@@ -667,20 +615,20 @@ function autoCalcMatParams(mat) {
                 }
             }
 
-            // --- 8. 仿真主循环 ---
+            // --- 8. Simulation main loop ---
             
-            // 初始化结果对象，确保包含 flux_L 和 v_L
+            // Initialize result object, ensure includes flux_L and v_L
             const results = { 
                 time: [], 
                 v_grid: [], 
                 v_inv: [], 
-                v_L: [],     // 电感电压
+                v_L: [],     // Inductor voltage
                 pwm: [], 
                 i_L: [],
-                flux_L: []   // 磁链
+                flux_L: []   // Flux linkage
             };
             
-            // 从conditions中获取Kp和Ki，如果没有则使用默认值
+            // Get Kp and Ki from conditions, use defaults if not available
             const Kp = kp !== undefined ? kp : 0.00004; 
             const Ki = ki !== undefined ? ki : 0.8;
             
@@ -689,89 +637,33 @@ function autoCalcMatParams(mat) {
             for (let step = 0; step < numSteps; step++) {
                 const t = step * dt;
 
-                // --- 控制回路 ---
-                let currentPower = 0;
-                if (isThreePhase) {
-                    currentPower = 
-                        getGridVoltage(t, 0) * state.i_L[0] +
-                        getGridVoltage(t, 1) * state.i_L[1] +
-                        getGridVoltage(t, 2) * state.i_L[2];
-                } else {
-                    currentPower = getGridVoltage(t) * state.i_L;
-                }
+                // --- Control loop ---
 
-                const powerError = power - currentPower;
-                state.powerIntegral += powerError * dt;
-                state.powerIntegral = Math.max(-state.powerIntegralLimit, Math.min(state.powerIntegralLimit, state.powerIntegral));
-                const m_adjust = (Kp * powerError + Ki * state.powerIntegral) * 0.001; 
-
-                // --- 电路仿真 ---
+                // --- Circuit simulation ---
                 
-                const loopPhases = isThreePhase ? 3 : 1;
-                const v_grid_vals = [];
-                const v_inv_vals = [];
-                const i_L_vals = [];
-                const v_L_vals = []; // 临时存储本步的电感电压
-                const flux_vals = []; // 临时存储本步的磁链
+                const v_L_vals = []; // Temporarily store inductor voltage for this step
+                const flux_vals = []; // Temporarily store flux linkage for this step
                 
-                let v_common_mode = 0;
-                if (numPhases == 3) {
-                    for (let a = 0; a < loopPhases; a++) {
-                        const v_g = getGridVoltage(t, a);        
-                        v_common_mode += (getPWMOutput(t, initialModulation, a, m_adjust))/ 3;// 对于三相三线，必须减去 V_NO;
-                    }
-                }
+                        v_common_mode += (getPWMOutput(t, initialModulation, a, m_adjust))/ 3;// For three-phase three-wire, must subtract V_NO;
 
-                for (let i = 0; i < loopPhases; i++) {
-                    const v_g = getGridVoltage(t, i);
+                    const v_inv = getPWMOutput(t, initialModulation, i, m_adjust);// For three-phase three-wire, must subtract V_NO
 
-                   
-                    const v_inv = getPWMOutput(t, initialModulation, i, m_adjust);// 对于三相三线，必须减去 V_NO
-
-                    const i_L_prev = isThreePhase ? state.i_L[i] : state.i_L;
+                    // Calculate inductor voltage: v_L = v_inv - v_grid - i*R
                     
-                    // 计算电感电压: v_L = v_inv - v_grid - i*R
-                    const v_L = v_inv - v_g - (i_L_prev * gridImpedance);
+                    // Calculate current change (Euler method update)
                     
-                    // 计算电流变化  (Euler法更新电流）
-                    const di = (v_L / L) * dt;
-                    let i_L_new = i_L_prev + di;
+                    // Soft current limiting
 
-                    // 软限流
-                    const absLimit = 2000; 
-                    if (i_L_new > absLimit) i_L_new = absLimit;
-                    if (i_L_new < -absLimit) i_L_new = -absLimit;
+                    // --- Flux linkage calculation (new part) ---
+                        // Integration: flux = flux + v_L * dt
 
-                    // --- 磁链计算 (新增部分) ---
-                    if (isThreePhase) {
-                        // 积分: flux = flux + v_L * dt
-                        state.flux_L[i] += v_L * dt;
-                    } else {
-                        state.flux_L += v_L * dt;
-                    }
+                    // Update state
 
-                    // 更新状态
-                    if (isThreePhase) state.i_L[i] = i_L_new;
-                    else state.i_L = i_L_new;
+                    // Record first phase data
 
-                    // 记录第一相数据
-                    if (i === 0) {
-                        v_grid_vals.push(v_g);
-                        v_inv_vals.push(v_inv);
-                        i_L_vals.push(i_L_new);
-                        v_L_vals.push(v_L);
-                        flux_vals.push(isThreePhase ? state.flux_L[0] : state.flux_L);
-                    }
-                }
-
-                // --- 数据降采样存储 ---
-                if (step % 10 === 0) {
-                    results.time.push(t);
-                    results.v_grid.push(v_grid_vals[0]);
-                    results.v_inv.push(v_inv_vals[0]);
-                    results.i_L.push(i_L_vals[0]);
-                    results.v_L.push(v_L_vals[0]);     // 存储电感电压
-                    results.flux_L.push(flux_vals[0]); // 存储磁链
+                // --- Data downsampling storage ---
+                    results.v_L.push(v_L_vals[0]);     // Store inductor voltage
+                    results.flux_L.push(flux_vals[0]); // Store flux linkage
                     results.pwm.push(v_inv_vals[0] / V_dc); 
                 }
             }
@@ -789,15 +681,15 @@ function autoCalcMatParams(mat) {
   return data;
         }
 
-// 积分法计算磁芯损耗：B-H积分法（替换斯坦梅森公式）
-// 参数：
-//   B_seq: 磁通密度序列，单位T（特斯拉），与H_seq长度一致
-//   H_seq: 磁场强度序列，单位A/m（安/米），与B_seq长度一致
-//   time_seq: 对应时间序列，单位s（秒），与B/H长度一致
-//   volume_m3: 磁芯体积，单位m³
-// 返回：{ loss_per_volume: 单位体积损耗(W/m³), loss_total: 总损耗(W) }
+// Core loss calculation by integration: B-H integration method (replaces Steinmetz formula)
+// Parameters:
+//   B_seq: Magnetic flux density sequence, unit T (Tesla), same length as H_seq
+//   H_seq: Magnetic field strength sequence, unit A/m (Ampere/meter), same length as B_seq
+//   time_seq: Corresponding time sequence, unit s (seconds), same length as B/H
+//   volume_m3: Core volume, unit m³
+// Returns: { loss_per_volume: Loss per volume (W/m³), loss_total: Total loss (W) }
 function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
-    // 边界校验：数据长度一致、非空、体积有效
+    // Boundary check: data lengths consistent, non-empty, volume valid
     if (!B_seq || !H_seq || !time_seq || 
         B_seq.length !== H_seq.length || 
         H_seq.length !== time_seq.length || 
@@ -806,26 +698,26 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
     }
 
     const n = B_seq.length;
-    let integral = 0; // 存储∫H·dB/dt dt的积分结果
-    const T = time_seq[n - 1] - time_seq[0]; // 时间周期（s）
+    let integral = 0; // Store integration result of ∫H·dB/dt dt
+    const T = time_seq[n - 1] - time_seq[0]; // Time period (s)
     if (T <= 0) return { loss_per_volume: 0, loss_total: 0 };
 
-    // 梯形法数值积分：遍历离散点计算H·dB/dt，并积分
+    // Trapezoidal numerical integration: calculate H·dB/dt for discrete points and integrate
     for (let i = 1; i < n; i++) {
-        const dt = time_seq[i] - time_seq[i - 1]; // 时间步长
-        const dB = B_seq[i] - B_seq[i - 1];       // B的变化量
-        if (dt === 0) continue; // 避免除零
+        const dt = time_seq[i] - time_seq[i - 1]; // Time step
+        const dB = B_seq[i] - B_seq[i - 1];       // Change in B
+        if (dt === 0) continue; // Avoid division by zero
 
         const dBdt = dB / dt; // dB/dt
-        // 梯形法：取相邻两个点的H平均值
+        // Trapezoidal method: take average of adjacent H values
         const H_avg = (H_seq[i] + H_seq[i - 1]) / 2;
-        // 积分微元：H_avg * dBdt * dt = H_avg * dB
+        // Integration element: H_avg * dBdt * dt = H_avg * dB
         integral += H_avg * dBdt * dt;
     }
 
-    // 计算单位体积损耗：1/T * |积分结果|（取绝对值，避免方向影响）
+    // Calculate loss per volume: 1/T * |integral| (take absolute value to avoid direction effect)
     const loss_per_volume = Math.abs(integral) / T;
-    // 计算总损耗：单位体积损耗 * 磁芯体积
+    // Calculate total loss: loss per volume * core volume
     const loss_total = loss_per_volume * volume_m3;
 
     return { loss_per_volume, loss_total };
@@ -839,11 +731,11 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
       const simulatedB = (voltage / (m.ae * m.turns * freq));
       const loss_total = (m.baseLossFactor * Math.pow(freq/10000, 1.5) * Math.pow(simulatedB, 2.0));
       
-      // 计算体积：Ae (cm²) * Le (mm) / 10 = cm³，然后转换为 m³
+      // Calculate volume: Ae (cm²) * Le (mm) / 10 = cm³, then convert to m³
       const volume_cm3 = m.ae * m.le / 10; // cm³
       const volume_m3 = volume_cm3 / 1e6; // m³
       
-      // 将loss除以体积得到 W/m³
+      // Divide loss by volume to get W/m³
       const loss_per_volume = volume_m3 > 0 ? loss_total / volume_m3 : 0;
       
       return {
@@ -867,9 +759,9 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 const valueDisplay = document.getElementById(id + '-value');
                 
                 if (slider && valueDisplay) {
-                    // 温度滑块特殊处理：只在松开鼠标时触发预测请求
+                    // Temperature slider special handling: only trigger prediction request on mouse release
                     if (id === 'temperature') {
-                        // input 事件：只更新显示的值，不触发预测请求
+                        // input event: only update displayed value, no prediction request
                         slider.addEventListener('input', (e) => {
                             const value = parseFloat(e.target.value);
                             conditions[id] = value;
@@ -877,14 +769,14 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                             valueDisplay.textContent = value + '°C';
                         });
                         
-                        // change 事件：松开鼠标时触发预测请求
+                        // change event: trigger prediction request on mouse release
                         slider.addEventListener('change', (e) => {
                             const value = parseFloat(e.target.value);
                             conditions[id] = value;
                             temperature = value;
                             valueDisplay.textContent = value + '°C';
                             
-                            // 如果有flux selection，更新B和H图表并重新发送预测请求
+                            // If there is flux selection, update B and H charts and resend prediction request
                             if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null && originalFluxData) {
                                 const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
                                 const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
@@ -908,7 +800,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                                     });
                                     
                                     updateBChart(allBData);
-                                    // 发送预测请求，预测结果会更新H图表
+                                    // Send prediction request, prediction results will update H chart
                                     requestPredictions();
                                 }
                             } else {
@@ -916,14 +808,18 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                             }
                         });
                     } else {
-                        // 其他滑块：使用 input 事件
+                        // Other sliders: use input event
                         slider.addEventListener('input', (e) => {
                             const value = parseFloat(e.target.value);
                             conditions[id] = value;
                             
-                            // 如果Filter L改变，重新计算所有材料的N推荐值
+                            // If Filter L changes, recalculate N recommendations for all materials
                             if (id === 'filterInductance') {
-                                recalculateNForAllMaterials();
+                                try {
+                                    recalculateNForAllMaterials();
+                                } catch (error) {
+                                    console.error('Error recalculating N:', error);
+                                }
                             }
                             
                             let unit = '';
@@ -1059,7 +955,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             materials.forEach(mat => {
                 const isSelected = selectedMaterialIds.includes(mat.id);
                 const matDiv = document.createElement('div');
-                // 根据选中状态设置不同的样式
+                // Set different styles based on selection state
                 const baseClasses = 'border rounded-lg p-3 cursor-pointer transition-all duration-200';
                 const selectedClasses = isSelected 
                     ? 'border-blue-500 bg-blue-50 shadow-sm' 
@@ -1126,7 +1022,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             // Add click event listeners to material items
             document.querySelectorAll('[data-material-id]').forEach(item => {
                 item.addEventListener('click', (e) => {
-                    // 如果点击的是输入框本身，不触发选择（stopPropagation 已经在输入框上处理）
+                    // If clicking on input field itself, do not trigger selection (stopPropagation already handled on input field)
                     if (e.target.tagName === 'INPUT') {
                         return;
                     }
@@ -1147,30 +1043,30 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 });
             });
             
-            // 更新显示的计算值
+            // Update displayed calculated values
             document.querySelectorAll('.material-R, .material-r, .material-d, .material-turns').forEach(input => {
                 input.addEventListener('input', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     const mat = materials.find(m => m.id === id);
                     if (mat) {
-                        // 更新输入值
+                        // Update input value
                         const field = e.target.classList.contains('material-R') ? 'R' : 
                                     e.target.classList.contains('material-r') ? 'r' : 
                                     e.target.classList.contains('material-d') ? 'd' : 'turns';
                         const value = parseFloat(e.target.value) || 0;
                         
-                        // 如果是R改变，触发自动计算r和d
+                        // If R changes, trigger automatic calculation of r and d
                         if (field === 'R' && value > 0) {
-    // 验证 R > 0 且 R > r
+    // Verify R > 0 and R > r
     if (numValue <= mat.r) numValue = mat.r + 1;
-    mat.R = Math.max(1, numValue); // 确保R至少为1，避免无意义值
+    mat.R = Math.max(1, numValue); // Ensure R is at least 1 to avoid meaningless value
     const input = document.querySelector(`.material-R[data-id="${id}"]`);
     if (input) input.value = mat.R;
     
-    // 【关键】调用通用自动计算函数，更新r、d、N
+    // [Key] callgeneralauto-calculationfunction，updater、d、N
     autoCalcMatParams(mat);
     
-    // 更新r、d、N输入框（原有代码保留，仅移除重复计算）
+    // updater、d、Ninput fields
     const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
     const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
     const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
@@ -1179,7 +1075,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
     if (nInput) nInput.value = mat.turns;
                         }
                         
-                        // 更新显示的计算值
+                        // Update displayed calculated values
                         const matDiv = e.target.closest('[data-material-id]');
                         if (matDiv) {
                             const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
@@ -1206,7 +1102,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 });
             });
 
-            // Add inductor structure diagram (显示第一个激活的材料)
+            // Add inductor structure diagram 
             const activeMaterial = materials.find(m => m.id === activeMatIds[0]);
             if (activeMaterial) {
                 const structureDiv = document.createElement('div');
@@ -1229,35 +1125,35 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             if (selectedMaterialIds.includes(id)) {
                 if (selectedMaterialIds.length > 1) {
                     selectedMaterialIds = selectedMaterialIds.filter(matId => matId !== id);
-                    // 如果取消选中的材料在 activeMatIds 中，也移除它
+                    // If deselected materialin activeMatIds, also remove it
                     activeMatIds = activeMatIds.filter(matId => matId !== id);
-                    // 如果 activeMatIds 为空，则添加第一个选中的材料
+                    // If activeMatIds is empty，
                     if (activeMatIds.length === 0 && selectedMaterialIds.length > 0) {
                         activeMatIds = [selectedMaterialIds[0]];
                     }
                 }
             } else {
                 selectedMaterialIds.push(id);
-                // 如果新选中的材料不在 activeMatIds 中，添加它
+                // If newly selected material activeMatIds ，
                 if (!activeMatIds.includes(id)) {
                     activeMatIds.push(id);
                 }
             }
             initMaterials();
-            // 不调用 updateCharts()，因为会重置 flux selection
-            // 只更新 B/H chart（如果有选中的 flux 区域）
+            // Do not call updateCharts()， flux selection
+            // Only update B/H chart
             updateBAndHChartsFromFluxSelection();
-            // 材料选择改变时，如果有flux selection，重新发送预测请求
+            // When material selection changes，Ifflux selection，
             if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null) {
                 requestPredictions();
             }
         }
 
-        // 当Filter L改变时，重新计算所有材料的N推荐值
+        // When Filter L changes，calculationN
         function recalculateNForAllMaterials() {
             materials.forEach(mat => {
                 if (mat.mu_r !== null && mat.mu_r !== undefined) {
-                    const L_target = conditions.filterInductance / 1000; // 转换为H
+                    const L_target = conditions.filterInductance / 1000; // Convert to H
                     const mu_0 = 4 * Math.PI * 1e-7; // H/m
                     const R_m = mat.R / 1000; // m
                     const r_m = mat.r / 1000; // m
@@ -1266,16 +1162,16 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
                     const numerator = L_target * (R_m + r_m) * Math.PI * 1000;
                     const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
-                    const recommended_N = Math.sqrt(numerator / denominator);
+                    const recommended_N = denominator > 0 ? Math.sqrt(numerator / denominator) : 10;
                     
-                    const N_final = Math.max(5, Math.min(200, Math.round(recommended_N)));
+                    const N_final = isFinite(recommended_N) ? Math.max(5, Math.min(200, Math.round(recommended_N))) : 10;
                     mat.turns = N_final;
                     
-                    // 更新N的输入框
+                    // updateNinput fields
                     const nInput = document.querySelector(`.material-turns[data-id="${mat.id}"]`);
                     if (nInput) nInput.value = N_final;
                     
-                    // 更新显示的计算值
+                    // Update displayed calculated values
                     const matDiv = document.querySelector(`[data-material-id="${mat.id}"]`);
                     if (matDiv) {
                         const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
@@ -1305,7 +1201,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             if (mat) {
                 let numValue = parseFloat(value) || 0;
                 
-                // 验证并限制值在范围内
+                // Verify and limit value within range
                 const ranges = {
                     'R': { min: 0, max: 500 },
                     'r': { min: 0, max: 400 },
@@ -1320,16 +1216,16 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     } else if (numValue > range.max) {
                         numValue = range.max;
                     }
-                    // 更新输入框显示的值
+                    // Update input fields
                     const input = document.querySelector(`.material-${field}[data-id="${id}"]`);
                     if (input) {
                         input.value = numValue;
                     }
                 }
                 
-                // 当R改变时，自动计算r和d的推荐值
+                // When R changes，auto-calculationrd
                 if (field === 'R') {
-                    // 验证 R > r
+                    // Verify R > r
                     if (numValue <= mat.r) {
                         numValue = mat.r + 1;
                         const input = document.querySelector(`.material-R[data-id="${id}"]`);
@@ -1337,27 +1233,27 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     }
                     mat.R = numValue;
                     
-                    // 自动设置推荐值：r = 0.4R, d = 0.3R
+                    // Automatically set recommended values：r = 0.4R, d = 0.3R
                     const recommended_r = 0.4 * numValue;
                     const recommended_d = 0.3 * numValue;
                     
-                    // 检查推荐值是否在范围内
+                    // Check if recommended values are within range
                     const r_final = Math.max(ranges.r.min, Math.min(ranges.r.max, recommended_r));
                     const d_final = Math.max(ranges.d.min, Math.min(ranges.d.max, recommended_d));
                     
                     mat.r = r_final;
                     mat.d = d_final;
                     
-                    // 更新r和d的输入框
+                    // updaterdinput fields
                     const rInput = document.querySelector(`.material-r[data-id="${id}"]`);
                     const dInput = document.querySelector(`.material-d[data-id="${id}"]`);
                     if (rInput) rInput.value = r_final;
                     if (dInput) dInput.value = d_final;
                     
-                    // 如果L已经计算出来（有mu_r），计算N的推荐值
+                    // If L is already calculated，calculationN
                     if (mat.mu_r !== null && mat.mu_r !== undefined) {
-                        // 使用Filter L作为目标电感值
-                        const L_target = conditions.filterInductance / 1000; // 转换为H
+                        // Use Filter L as target inductance value
+                        const L_target = conditions.filterInductance / 1000; // Convert to H
                         // N = sqrt(Lfilter * (R+r) * Pi * 1000 / (u0 * ur * (R-r) * d))
                         const mu_0 = 4 * Math.PI * 1e-7; // H/m
                         const R_m = mat.R / 1000; // m
@@ -1368,16 +1264,16 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                         const denominator = mu_0 * mat.mu_r * (R_m - r_m) * d_m;
                         const recommended_N = Math.sqrt(numerator / denominator);
                         
-                        // 限制N在合理范围内
+                        // Limit N within reasonable range
                         const N_final = Math.max(ranges.turns.min, Math.min(ranges.turns.max, Math.round(recommended_N)));
                         mat.turns = N_final;
                         
-                        // 更新N的输入框
+                        // updateNinput fields
                         const nInput = document.querySelector(`.material-turns[data-id="${id}"]`);
                         if (nInput) nInput.value = N_final;
                     }
                 } else {
-                    // 验证 R > r
+                    // Verify R > r
                     if (field === 'R' && numValue <= mat.r) {
                         numValue = mat.r + 1;
                         const input = document.querySelector(`.material-R[data-id="${id}"]`);
@@ -1391,9 +1287,9 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     
                     mat[field] = numValue;
                     
-                    // 如果r或d改变，且L已经计算出来，重新计算N的推荐值
+                    // If r or d changes，Lalreadycalculation，calculationN
                     if ((field === 'r' || field === 'd') && mat.mu_r !== null && mat.mu_r !== undefined) {
-                        const L_target = conditions.filterInductance / 1000; // 转换为H
+                        const L_target = conditions.filterInductance / 1000; // Convert to H
                         const mu_0 = 4 * Math.PI * 1e-7; // H/m
                         const R_m = mat.R / 1000; // m
                         const r_m = mat.r / 1000; // m
@@ -1412,7 +1308,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     }
                 }
                 
-                // 更新显示的计算值
+                // Update displayed calculated values
                 const matDiv = document.querySelector(`[data-material-id="${id}"]`);
                 if (matDiv) {
                     const calcDiv = matDiv.querySelector('.flex.flex-wrap.gap-3..text-xs');
@@ -1436,11 +1332,11 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     }
                 }
                 
-                // 不调用 updateCharts()，因为会重置 flux selection
-                // 只更新 B/H chart（如果有选中的 flux 区域）
+                // Do not call updateCharts()， flux selection
+                // Only update B/H chart
                 updateBAndHChartsFromFluxSelection();
                 
-                // 如果更新的材料在选中的材料列表中，且有 flux selection，自动触发预测
+                // Ifupdate， flux selection，
                 if (selectedMaterialIds.includes(id) && 
                     fluxSelectionStartIndex !== null && 
                     fluxSelectionEndIndex !== null) {
@@ -1449,9 +1345,9 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             }
         }
         
-        // 根据选中的 flux 区域更新 B 和 H chart
+        // Based on selected flux regionupdate B  H chart
         function updateBAndHChartsFromFluxSelection() {
-            // 如果有选中的 flux 区域，更新 B chart
+            // If there is selected flux region，update B chart
             if (fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null && originalFluxData) {
                 const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
                 const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
@@ -1460,14 +1356,14 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     const allBData = [];
                     
                     activeMaterials.forEach(activeMaterial => {
-                        const Ae_m2 = activeMaterial.ae / 10000; // 平方厘米转平方米
+                        const Ae_m2 = activeMaterial.ae / 10000; // Square cm to square m
                         const N = activeMaterial.turns;
                         
                         const bData = fluxValues.map((flux_Wb, index) => {
-                            const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
+                            const B_T = flux_Wb / Ae_m2 / N; // Calculate B (Tesla)
                             return {
                                 time: fluxSelectionStartIndex + index,
-                                B: B_T * 1000 // 转换为毫特斯拉用于数据格式兼容
+                                B: B_T * 1000 // Convert to milliTesla for data format compatibility
                             };
                         });
                         
@@ -1475,16 +1371,16 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     });
                     
                     updateBChart(allBData);
-                    // H chart 的更新将在预测请求完成后实现
+                    // H chart update will be implemented after prediction request completes
                     // updateHChart(allHData);
                 }
             } else {
-                // 如果没有选中的区域，正常更新所有图表
+                // If no region is selected，update
                 updateCharts();
             }
         }
         
-        // 显示加载遮罩
+        // Show loading overlay
         function showLoadingOverlay() {
             const overlay = document.getElementById('loading-overlay');
             if (overlay) {
@@ -1492,7 +1388,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             }
         }
         
-        // 隐藏加载遮罩
+        // Hide loading overlay
         function hideLoadingOverlay() {
             const overlay = document.getElementById('loading-overlay');
             if (overlay) {
@@ -1500,9 +1396,9 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             }
         }
         
-        // 发送预测请求
+        // Send prediction request
         async function requestPredictions() {
-            // 检查是否有flux selection
+            // Check if there is flux selection
             if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null || !originalFluxData || !originalTimeData) {
                 return;
             }
@@ -1514,31 +1410,31 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 return;
             }
             
-            // 计算选中区域的真实时间
+            // Calculate real time of selected region
             const timeValues = originalTimeData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
             const realTime = timeValues.length > 1 ? timeValues[timeValues.length - 1] - timeValues[0] : 0;
             
-            // 显示加载遮罩
+            // Show loading overlay
             showLoadingOverlay();
             
             try {
-                // 为每个选中的材料发送预测请求
+                // Send prediction request for each selected material
                 const predictionPromises = selectedMaterials.map(async (material) => {
-                    // 验证材料参数
+                    // Verify material parameters
                     if (material.ae <= 0 || material.le <= 0 || material.turns <= 0) {
                         console.warn(`Material ${material.name} has invalid parameters (Ae: ${material.ae}, Le: ${material.le}, turns: ${material.turns}). Skipping prediction.`);
                         return;
                     }
                     
-                    // 计算B值
-                    const Ae_m2 = material.ae / 10000; // 平方厘米转平方米
+                    // Calculate B values
+                    const Ae_m2 = material.ae / 10000; // Square cm to square m
                     const N = material.turns;
                     const B_values = fluxValues.map((flux_Wb) => {
-                        const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
-                        return B_T; // 返回特斯拉单位
+                        const B_T = flux_Wb / Ae_m2 / N; // Calculate B (Tesla)
+                        return B_T; // Return Tesla unit
                     });
                     
-                    // 发送预测请求
+                    // Send prediction request
                     try {
                         const response = await fetch('/api/predict', {
                             method: 'POST',
@@ -1550,7 +1446,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                                 sample: {
                                     B: B_values,
                                     T: temperature,
-                                    real_time: realTime  // 传递真实时间
+                                    real_time: realTime  // Pass real time
                                 }
                             })
                         });
@@ -1561,12 +1457,12 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                         
                         const result = await response.json();
                         
-                        // H 缩放：缩放比例 = Lstd / Le，Lstd = 85.5mm
+                        // H scaling： = Lstd / Le，Lstd = 85.5mm
                         const Lstd = 85.5; // mm
-                        const scaleFactor = material.le > 0 ? Lstd / material.le : 1.0; // 避免除以零
+                        const scaleFactor = material.le > 0 ? Lstd / material.le : 1.0; // Avoid division by zero
                         const H_scaled = result.H_pred.map(h => h * scaleFactor);
                         
-                        // 存储预测结果（使用缩放后的H）
+                        // Store prediction results
                         predictionResults[material.id] = {
                             H_pred: H_scaled,
                             core_loss: result.core_loss
@@ -1584,10 +1480,10 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     }
                 });
                 
-                // 等待所有预测完成
+                // Wait for all predictions to complete
                 await Promise.all(predictionPromises);
                 
-                // 更新H图表和Loss图表
+                // Update H chart and Loss chart
                 updateHChartFromPredictions();
                 updateLossChartFromPredictions();
             } catch (error) {
@@ -1595,12 +1491,12 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 // Show error message
                 alert('Prediction failed, please try again');
             } finally {
-                // 隐藏加载遮罩
+                // Hide loading overlay
                 hideLoadingOverlay();
             }
         }
         
-        // 从预测结果更新H图表
+        // Update H chart from prediction results
         function updateHChartFromPredictions() {
             if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null) {
                 return;
@@ -1613,7 +1509,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 .filter(m => predictionResults[m.id] && predictionResults[m.id].H_pred)
                 .map(material => {
                     const H_pred = predictionResults[material.id].H_pred;
-                    // 确保长度匹配
+                    // Ensure length matches
                     const hData = H_pred.slice(0, dataLength).map((h, index) => ({
                         time: fluxSelectionStartIndex + index,
                         H: h
@@ -1627,9 +1523,9 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             }
         }
         
-        // 从预测结果更新Loss图表
+        // Update Loss chart from prediction results
         function updateLossChartFromPredictions() {
-    // 边界校验：有Flux选中、有时间数据、有预测结果
+    // Boundary check：Flux、、
     if (fluxSelectionStartIndex === null || fluxSelectionEndIndex === null || !originalTimeData || Object.keys(predictionResults).length === 0) {
         const lossData = calculateLosses(materials, conditions.frequency, conditions.dcVoltage, selectedMaterialIds);
         updateLossChart(lossData);
@@ -1639,35 +1535,35 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
     const lossData = materials
         .filter(m => selectedMaterialIds.includes(m.id))
         .map(m => {
-            // 1. 计算磁芯体积（复用原有正确逻辑）
+            // 1. calculation
             const volume_cm3 = m.ae * m.le / 10; // cm³
             const volume_m3 = volume_cm3 / 1e6; // m³
             if (volume_m3 <= 0) {
                 return { id: m.id, name: m.name, loss: 0, loss_total: 0, color: m.color };
             }
 
-            // 2. 获取当前材料的预测H序列
+            // 2. H
             const predResult = predictionResults[m.id];
             if (!predResult || !predResult.H_pred || predResult.H_pred.length === 0) {
                 return { id: m.id, name: m.name, loss: 0, loss_total: 0, color: m.color };
             }
 
-            // 3. 重新计算当前材料的B序列（与H序列严格对应，单位T）
+            // 3. calculationB
             const fluxValues = originalFluxData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
             const Ae_m2 = m.ae / 10000; // cm² → m²
             const N = m.turns;
-            const B_seq = fluxValues.map(flux_Wb => flux_Wb / Ae_m2 / N); // 单位：T
+            const B_seq = fluxValues.map(flux_Wb => flux_Wb / Ae_m2 / N); // Unit: T
 
-            // 4. 获取对应时间序列（单位s）
+            // 4. 
             const time_seq = originalTimeData.slice(fluxSelectionStartIndex, fluxSelectionEndIndex + 1);
 
-            // 5. 截取H序列（保证与B/time长度一致）
-            const H_seq = predResult.H_pred.slice(0, B_seq.length); // 单位：A/m
+            // 5. H
+            const H_seq = predResult.H_pred.slice(0, B_seq.length); // Unit: A/m
 
-            // 6. 核心：调用积分法计算损耗（替换斯坦梅森公式）
+            // 6. ：callcalculation
             const { loss_per_volume, loss_total } = calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3);
 
-            // 7. 格式化返回（保留2位小数，与原有显示一致）
+            // 7. 
             return {
                 id: m.id,
                 name: m.name,
@@ -1685,7 +1581,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             const displayElement = document.getElementById('active-material-display');
             
             if (activeMaterials.length > 0) {
-                // 显示所有激活的材料
+                // Show all active materials
                 const materialsHtml = activeMaterials.map(mat => 
                     `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
                         <div class="w-2 h-2 rounded-full" style="background-color: ${mat.color};"></div>
@@ -1711,13 +1607,13 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
         let resizeUpdateTimeout = null;
 
         function updateCharts() {
-            // 如果处于暂停状态，跳过更新
+            // Skip update if in paused state
             if (isResizePaused) {
                 return;
             }
             
-            // Reset flux selection when conditions change (只在 conditions 改变时重置)
-            // 注意：这个函数在 conditions 改变时调用，所以重置是合理的
+            // Reset flux selection when conditions change (only reset when conditions change)
+            // Note: this function is called when conditions change, so reset is reasonable
             fluxSelectionStartIndex = null;
             fluxSelectionEndIndex = null;
             
@@ -1725,7 +1621,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
         }
         
         function updateChartsWithoutResettingFlux() {
-            // 如果处于暂停状态，跳过更新
+            // Skip update if in paused state
             if (isResizePaused) {
                 return;
             }
@@ -1734,7 +1630,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
             
             if (activeMaterials.length > 0) {
-                // 为所有激活的材料生成数据
+                // Generate data for all active materials
                 const allBData = [];
                 const allHData = [];
                 
@@ -1750,12 +1646,12 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     allHData.push({ material: activeMaterial, data: chartData });
                 });
                 
-                // 更新图表，显示所有激活的材料
+                // Update charts, show all active materials
                 updateBChart(allBData);
                 updateHChart(allHData);
             }
 
-            // 如果有预测结果，使用预测结果更新Loss图表，否则使用默认计算
+            // If there are prediction results, use them to update Loss chart, otherwise use default calculation
             if (Object.keys(predictionResults).length > 0 && fluxSelectionStartIndex !== null && fluxSelectionEndIndex !== null) {
                 updateLossChartFromPredictions();
             } else {
@@ -1766,7 +1662,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             updateFluxChart(simulationData);
         }
         
-        // 防抖的 resize 处理函数
+        // Debounced resize handler function
         function handleResize() {
             if (isResizePaused) {
                 return;
@@ -1775,7 +1671,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             clearTimeout(resizeUpdateTimeout);
             resizeUpdateTimeout = setTimeout(() => {
                 if (!isResizePaused && voltageChart && fluxChart && lossChart && bChart && hChart) {
-                    // 使用 requestAnimationFrame 确保在下一帧更新
+                    // Use requestAnimationFrame to ensure update in next frame
                     requestAnimationFrame(() => {
                         if (!isResizePaused) {
                             voltageChart.resize();
@@ -1789,7 +1685,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             }, 100);
         }
         
-        // 监听窗口 resize 事件
+        // Listen to window resize event
         window.addEventListener('resize', handleResize, { passive: true });
 
         function updateVoltageChart(data) {
@@ -1856,7 +1752,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: false, // 禁用动画以提高性能
+                    animation: false, // Disable animation for better performance
                     plugins: {
                         legend: {
                             display: true,
@@ -2037,19 +1933,19 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             if (fluxSelectionStartIndex !== null || fluxSelectionEndIndex !== null) {
                 fluxSelectionStartIndex = null;
                 fluxSelectionEndIndex = null;
-                // 清除预测结果
+                // Clear prediction results
                 if (typeof predictionResults !== 'undefined') {
                     predictionResults = {};
                 }
-                // 更新图表以移除选择区域显示
+                // Update charts to remove selection region display
                 if (fluxChart) {
                     fluxChart.update('none');
                 }
-                // 重置 B 和 H 图表
+                // Reset B and H charts
                 if (typeof updateBAndHChartsFromFluxSelection !== 'undefined') {
                     updateBAndHChartsFromFluxSelection();
                 }
-                // 重置 Loss 图表
+                // Reset Loss chart
                 if (typeof materials !== 'undefined' && typeof conditions !== 'undefined' && typeof selectedMaterialIds !== 'undefined') {
                     const lossData = calculateLosses(materials, conditions.frequency, conditions.dcVoltage, selectedMaterialIds);
                     if (typeof updateLossChart !== 'undefined') {
@@ -2345,11 +2241,11 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 return index;
             };
             
-            // 用于区分选择和平移的变量
+            // Variables to distinguish selection and panning
             let mouseDownTime = null;
             let mouseDownPos = null;
             
-            // 清除 flux selection 的函数 (use global resetFluxSelection instead)
+            // Function to clear flux selection (use global resetFluxSelection instead)
             function clearFluxSelection() {
                 resetFluxSelection();
             }
@@ -2358,7 +2254,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 if (e.button === 0) { // Left mouse button
                     mouseDownTime = Date.now();
                     mouseDownPos = getEventPos(e);
-                    // 如果按住 Ctrl 或 Shift，则允许平移，清除选择
+                    // If holding Ctrl or Shift，，selection
                     if (e.ctrlKey || e.shiftKey) {
                         clearFluxSelection();
                         return;
@@ -2375,11 +2271,11 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     currentX = getEventPos(e);
                     fluxChart.update('none');
                 } else if (mouseDownTime !== null && mouseDownPos !== null) {
-                    // 检测是否是平移操作（鼠标移动距离较大）
+                    // Detect if it is panning operation
                     const currentPos = getEventPos(e);
                     const moveDistance = Math.abs(currentPos - mouseDownPos);
                     const timeElapsed = Date.now() - mouseDownTime;
-                    // 如果移动距离超过 10 像素且时间很短，可能是平移操作
+                    // If movement exceeds 10 pixels in short time，
                     if (moveDistance > 10 && timeElapsed < 200) {
                         clearFluxSelection();
                         mouseDownTime = null;
@@ -2410,31 +2306,31 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                         console.log('Flux end index:', endIndex);
                         console.log('Flux values from start to end:', fluxValues);
 
-                        // 将 fluxValues 转换成真实的 B 值并更新 B chart
-                        // 获取所有激活的材料
+                        // Convert fluxValues to real B values and update B chart
+                        // Get all active materials
                         const activeMaterials = materials.filter(m => activeMatIds.includes(m.id));
                         
                         if (activeMaterials.length > 0 && fluxValues.length > 0) {
-                            // 为每个激活的材料计算 B 值
+                            // Calculate B values for each active material
                             const allBData = [];
                             
                             activeMaterials.forEach(activeMaterial => {
-                                // 公式：B = flux / Ae / N
-                                // flux: 韦伯 (originalFluxData 中的值已经是韦伯单位)
-                                // Ae: 平方厘米 → 平方米 (除以 10000)
-                                // 结果单位：T (特斯拉)
+                                // Formula: B = flux / Ae / N
+                                // flux: Weber 
+                                // Ae: square cm → square m 
+                                // ：T 
                                 
-                                const Ae_m2 = activeMaterial.ae / 10000; // 平方厘米转平方米
+                                const Ae_m2 = activeMaterial.ae / 10000; // Square cm to square m
                                 const N = activeMaterial.turns;
                                 
-                                // 计算每个 flux 值对应的 B 值
+                                // calculation flux  B 
                                 const bData = fluxValues.map((flux_Wb, index) => {
-                                    // flux_Wb 已经是韦伯单位，不需要转换
-                                    const B_T = flux_Wb / Ae_m2 / N; // 计算 B (特斯拉)
+                                    // flux_Wb already，
+                                    const B_T = flux_Wb / Ae_m2 / N; // Calculate B (Tesla)
                                     
                                     return {
                                         time: startIndex + index,
-                                        B: B_T * 1000 // 转换为毫特斯拉用于数据格式兼容
+                                        B: B_T * 1000 // Convert to milliTesla for data format compatibility
                                     };
                                 });
                                 
@@ -2443,10 +2339,10 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                                 allBData.push({ material: activeMaterial, data: bData });
                             });
                             
-                            // 更新 B chart，显示所有激活的材料
+                            // update B chart，
                             updateBChart(allBData);
                             
-                            // 发送预测请求
+                            // Send prediction request
                             requestPredictions();
                         }
                         
@@ -2471,11 +2367,11 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 }
             });
             
-            // 监听缩放事件，缩放时清除 flux selection
-            // 使用 wheel 事件监听鼠标滚轮缩放
+            // ， flux selection
+            //  wheel 
             let wheelTimeout = null;
             canvas.addEventListener('wheel', () => {
-                // 防抖处理，避免频繁触发
+                // handled，
                 clearTimeout(wheelTimeout);
                 wheelTimeout = setTimeout(() => {
                     if (!isSyncingCharts) {
@@ -2484,7 +2380,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                 }, 100);
             }, { passive: true });
             
-            // 监听触摸缩放事件（pinch）
+            
             let touchStartDistance = null;
             let pinchTimeout = null;
             canvas.addEventListener('touchstart', (e) => {
@@ -2506,7 +2402,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                         touch2.clientX - touch1.clientX,
                         touch2.clientY - touch1.clientY
                     );
-                    // 如果距离变化超过阈值，说明正在缩放
+                    // If，
                     if (Math.abs(currentDistance - touchStartDistance) > 10) {
                         clearTimeout(pinchTimeout);
                         pinchTimeout = setTimeout(() => {
@@ -2536,7 +2432,7 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
                     labels: data.map(d => d.name),
                     datasets: [{
                         label: 'Loss (W/m³)',
-                        data: data.map(d => Math.abs(d.loss)), // 确保loss是正数
+                        data: data.map(d => Math.abs(d.loss)), // loss
                         backgroundColor: data.map(d => activeMatIds.includes(d.id) ? d.color : d.color + '80'),
                         borderColor: data.map(d => activeMatIds.includes(d.id) ? '#1e293b' : 'transparent'),
                         borderWidth: data.map(d => activeMatIds.includes(d.id) ? 2 : 0)
@@ -2594,17 +2490,17 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             
             if (bChart) bChart.destroy();
             
-            // 如果传入的是单个材料数据（兼容旧代码），转换为数组格式
+            // If，
             let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
             
-            // 获取第一个数据集的长度用于 labels
+            //  labels
             const firstData = dataArray[0]?.data || [];
             const labels = firstData.map((d, i) => i);
             
-            // 为每个材料创建数据集
+            
             const datasets = dataArray.map(({ material, data }) => ({
                 label: material.name,
-                data: data.map(d => d.B / 1000), // 转换为特斯拉（T）
+                data: data.map(d => d.B / 1000), 
                 borderColor: material.color,
                 backgroundColor: 'transparent',
                 borderWidth: 3,
@@ -2665,14 +2561,14 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             
             if (hChart) hChart.destroy();
             
-            // 如果传入的是单个材料数据（兼容旧代码），转换为数组格式
+            // If，
             let dataArray = Array.isArray(materialsData) ? materialsData : [{ material: materialsData.material, data: materialsData.data }];
             
-            // 获取第一个数据集的长度用于 labels
+            //  labels
             const firstData = dataArray[0]?.data || [];
             const labels = firstData.map((d, i) => i);
             
-            // 为每个材料创建数据集
+            
             const datasets = dataArray.map(({ material, data }) => ({
                 label: material.name,
                 data: data.map(d => d.H),
@@ -2734,18 +2630,14 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3) {
             initSliders();
             initTopology();
             initPresets();
+            // ：，Rauto-calculationr、d、N
+            materials.forEach(mat => {
+                if (mat.R > 0) { // onlyRcalculation
+                    autoCalcMatParams(mat);
+                }
+            });
             initMaterials();
             updateCharts();
-                // 【新增】初始化核心步骤：遍历所有材料，根据初始R自动计算r、d、N
-    materials.forEach(mat => {
-        if (mat.R > 0) { // 仅对有初始R有效值的材料计算
-            autoCalcMatParams(mat);
-        }
-    });
-    // 重新初始化材料列表，渲染计算后的r、d、N到输入框
-    initMaterials();
-    // 初始化更新图表，触发基础磁损计算（无需Flux选择）
-    updateCharts();
         });
     </script>
 </body>

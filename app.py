@@ -5,7 +5,7 @@ Provides web interface for magnetic component design with real-time prediction,
 model fine-tuning, and interactive visualization tools.
 """
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 import sys
 import os
 import numpy as np
@@ -612,6 +612,20 @@ def download_file(task_id, file_type):
         traceback.print_exc()
         return jsonify({'error': f'Download failed: {str(e)}'}), 500
 
+@app.route('/resources/<path:filename>')
+def serve_resource(filename):
+    """Serve files from static/resources directory for direct download.
+
+    Args:
+        filename: Path to file within static/resources directory.
+
+    Returns:
+        File response for direct download.
+
+    Raises:
+        404: If file not found.
+    """
+    return send_from_directory('static/resources', filename, as_attachment=True)
 
 def cleanup_old_files():
     """Clean up files older than CACHE_RETENTION_DAYS.

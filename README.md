@@ -1,6 +1,8 @@
 # AI Magnetic Component Design Platform
 
-A comprehensive web-based platform for designing and optimizing magnetic components, particularly for DC-AC converters. This system combines advanced neural network models with intuitive design tools to help engineers create efficient magnetic components. We have developed a [online website](https://u2802747-b031-2c6ccc63.westb.seetacloud.com:8443) to simulate and analyse, or you can try to deploy this in your own machine. 
+A comprehensive web-based platform for designing and optimizing magnetic components, particularly for DC-AC converters. This system combines advanced neural network models with intuitive design tools to help engineers create efficient magnetic components. We have developed a [online website](https://u2802747-b031-2c6ccc63.westb.seetacloud.com:8443) to simulate and analyse, or you can try to deploy this in your own machine.
+
+We provide a toy data in our website which can be downloaded in [fine tune data](https://u2802747-b031-2c6ccc63.westb.seetacloud.com:8443/static/resources/Data_Finetune.zip) and [test center data](https://u2802747-b031-2c6ccc63.westb.seetacloud.com:8443/static/resources/B_TestCenter.csv).
 
 ## Features
 

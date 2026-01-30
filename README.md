@@ -5,6 +5,7 @@ A comprehensive web-based platform for designing and optimizing magnetic compone
 ## Features
 
 - **Interactive Design Center**: Real-time parameter adjustment with comprehensive visualization tools
+- **Core Loss Analysis**: Upload B data, select materials, and compare core loss predictions across different magnetic materials
 - **Pre-trained Neural Network Models**: Five pre-trained models for different magnetic materials (3C90, 3C94, 3E6, 3F4, and Other)
 - **Model Fine-tuning**: Custom model training and fine-tuning capabilities with transfer learning support
 - **Real-time Visualization**: Multiple charts showing magnetic properties, B-H curves, core loss, and more
@@ -79,6 +80,7 @@ ai-magnetic-design/
 │   ├── index.html        # Main navigation page
 │   ├── design.html       # Design center interface
 │   ├── fine_tune.html    # Model fine-tuning interface
+│   ├── test.html         # Core loss analysis interface
 │   └── document.html     # User documentation
 ├── static/               # Static assets (CSS, JS, images)
 ├── weights/              # Pre-trained model weights
@@ -99,6 +101,16 @@ For comprehensive documentation with detailed instructions, examples, and troubl
 3. Configure operating conditions: topology, voltages, frequencies, filter parameters
 4. Select materials and view magnetic properties in synchronized charts
 5. Select flux regions to trigger AI predictions for B-H curves
+
+#### Core Loss Analysis
+1. Navigate to the Test interface from the main menu
+2. Upload B.csv file containing magnetic flux density data (single line, comma-separated values in Tesla)
+3. Adjust temperature slider (0-100°C) to set operating temperature
+4. Select magnetic materials for comparison (3C90, 3C94, 3E6, 3F4, Other)
+5. View real-time AI predictions for:
+   - Core loss comparison (W/m³) across selected materials
+   - Magnetic flux density B (T) waveform
+   - Field strength H (A/m) predictions
 
 #### Grid-Connected DC-AC Simulation
 The platform includes a comprehensive time-domain simulation model for grid-connected inverters with:
@@ -122,10 +134,34 @@ Access pre-trained neural network models for five magnetic materials:
 3. Monitor real-time training metrics (loss curves, RMSE, Energy Loss)
 4. Download trained weights (.sd) and comprehensive PDF report
 
+#### Core Loss Analysis Interface (test.html)
+The test.html interface provides a specialized tool for analyzing core loss across different magnetic materials:
+
+**Key Features:**
+- **B Data Upload**: Upload single-line CSV files containing magnetic flux density (B) data in Tesla
+- **Temperature Control**: Adjust operating temperature from 0-100°C with real-time updates
+- **Material Selection**: Compare up to 5 magnetic materials (3C90, 3C94, 3E6, 3F4, Other)
+- **Real-time AI Predictions**: Automatic H field prediction and core loss calculation
+- **Visualization**: Three synchronized charts showing:
+  - Core loss comparison (W/m³) across selected materials
+  - Magnetic flux density B (T) waveform
+  - Predicted field strength H (A/m) for each material
+
+**Core Loss Calculation:**
+The interface uses numerical integration of the hysteresis loop (∮ H dB) to calculate core loss density:
+- Sampling frequency: 16 MHz (default)
+- Trapezoidal rule integration for energy calculation
+- Power density conversion: W/m³ = Energy (J/m³) / Time (s)
+
+**Data Format:**
+- B.csv: Single line of comma-separated values representing B in Tesla
+- Example: `0.1,0.2,0.15,0.25,...`
+
 ### Detailed Documentation Sections
 The User Documentation page provides comprehensive coverage of:
 - **Getting Started**: System requirements and key features
 - **Design Center**: Core parameters, visualization tools, chart synchronization
+- **Core Loss Analysis**: B data upload, material selection, AI prediction workflow
 - **Grid-Connected DC-AC Simulation**: System architecture, PWM modeling, power control
 - **Model Libraries**: Pre-trained model specifications and selection
 - **Parameters & Settings**: Valid parameter ranges and model settings
@@ -156,9 +192,11 @@ Response:
 {
   "H_pred": [0.0, 0.1, ...],  // Predicted magnetic field strength
   "mu": [1000, 1100, ...],   // Permeability sequence
-  "core_loss": 0.05          // Core loss value
+  "core_loss": 0.05          // Core loss value (W/m³)
 }
 ```
+
+**Note**: The test.html interface uses the same `/api/predict` endpoint but includes additional client-side core loss calculation using the `calculateCoreLoss()` function which computes core loss density (W/m³) from B and H data using numerical integration of the hysteresis loop.
 
 #### Upload Training Data
 

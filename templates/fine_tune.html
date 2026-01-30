@@ -365,20 +365,20 @@
                 <!-- Middle Panel - Model Architecture & Visualization -->
                 <section class="col-span-7 flex flex-col gap-3 overflow-y-auto">
                     <!-- Model Architecture Diagram -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
-                            <h2 class="text-gray-800 font-semibold .text-s flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                </svg>
-                                Neural Network Architecture
-                            </h2>
-                        </div>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+						<div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+							<h2 class="text-gray-800 font-semibold .text-s flex items-center gap-1.5">
+								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+								</svg>
+								Neural Network Architecture
+							</h2>
+						</div>
 
-                        <div class="p-4 bg-gray-50">
-                            <img src="/static/images/model.svg" alt="Neural Network Architecture" class="w-full architecture-svg" style="height: 545px; object-fit: contain;">
-                        </div>
-                    </div>
+						<div class="bg-gray-50 flex-1 flex justify-center items-center min-h-0 overflow-hidden">
+							<img src="/static/images/model.svg" alt="Neural Network Architecture" class="max-w-full max-h-full object-contain">
+						</div>
+					</div>
 
                     <!-- Training Progress & Loss Curves -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden training-progress-section">
@@ -557,14 +557,14 @@
                             </button>
                             -->
 
-                            <button id="export-weights" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold .text-s flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="export-weights" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-1 rounded-lg font-semibold .text-s flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed" style="font-size: 12px;">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                 </svg>
                                 Download Weights (.sd)
                             </button>
 
-                            <button id="export-pdf" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold .text-s flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="export-pdf" disabled class="w-full bg-white border border-gray-300 text-gray-700 py-1 rounded-lg font-semibold .text-s flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed" style="font-size: 12px;">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                 </svg>

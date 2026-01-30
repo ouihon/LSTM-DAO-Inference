@@ -125,6 +125,288 @@
                 background-position: -200% 0;
             }
         }
+		
+		/* Onboarding Overlay - Fixed Left Version */
+		.onboarding-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 10000;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+
+		.onboarding-overlay.active {
+			opacity: 1;
+			pointer-events: all;
+		}
+
+		.onboarding-backdrop {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.23);
+			backdrop-filter: blur(4px);
+		}
+
+		/* Spotlight precisely on Flux Chart */
+		.onboarding-spotlight {
+			position: fixed;
+			border-radius: 12px;
+			box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.23);
+			border: 3px solid #3b82f6;
+			pointer-events: none;
+			z-index: 10001;
+			transition: all 0.3s ease-out;
+			display: none;
+		}
+
+		/* Dialog fixed on LEFT side */
+		.onboarding-step-box {
+			position: fixed;
+			left: 50px;  /* Fixed to left */
+			top: 50%;
+			transform: translateY(-50%);  /* Vertically centered */
+			background: white;
+			border-radius: 16px;
+			padding: 40px;
+			width: 420px;
+			box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+			z-index: 10003;
+			border: 3px solid #3b82f6;
+			display: none;
+		}
+
+		.onboarding-step-box h3 {
+			font-size: 28px;
+			font-weight: 700;
+			color: #1e293b;
+			margin: 0 0 20px 0;
+		}
+
+		.onboarding-step-box p {
+			font-size: 20px;
+			line-height: 1.6;
+			color: #475569;
+			margin: 0 0 28px 0;
+		}
+
+		.onboarding-step-box button {
+			width: 100%;
+			padding: 16px;
+			background: #3b82f6;
+			color: white;
+			border: none;
+			border-radius: 10px;
+			font-size: 18px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		.onboarding-step-box button:hover {
+			background: #2563eb;
+			transform: translateY(-2px);
+		}
+
+		/* Close button stays top-right */
+		.onboarding-close {
+			position: fixed;
+			top: 24px;
+			right: 24px;
+			background: white;
+			border: 2px solid #e2e8f0;
+			border-radius: 8px;
+			padding: 12px 24px;
+			font-size: 16px;
+			font-weight: 600;
+			color: #475569;
+			cursor: pointer;
+			z-index: 10004;
+			pointer-events: all;
+			transition: all 0.2s;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		}
+
+		.onboarding-close:hover {
+			background: #f1f5f9;
+			border-color: #cbd5e1;
+		}
+
+		/* Mouse Cursor - Precise positioning */
+		.mouse-cursor {
+			position: fixed;
+			width: 52px;
+			height: 52px;
+			z-index: 10002;
+			pointer-events: none;
+			display: none;
+			transition: left 0.3s ease-out, top 0.3s ease-out, transform 0.3s;
+			filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
+		}
+
+		.mouse-cursor svg {
+			width: 100%;
+			height: 100%;
+			fill: white;
+			stroke: #1e293b;
+			stroke-width: 2;
+		}
+
+		/* Scroll Wheel attached to cursor */
+		.wheel-indicator {
+			position: absolute;
+			bottom: -15px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 22px;
+			height: 32px;
+			border: 3px solid #3b82f6;
+			border-radius: 11px;
+			background: rgba(59, 130, 246, 0.1);
+			display: flex;
+			justify-content: center;
+			padding-top: 6px;
+			box-sizing: border-box;
+			pointer-events: none;
+		}
+
+		.wheel-dot {
+			width: 4px;
+			height: 8px;
+			background: #3b82f6;
+			border-radius: 2px;
+			animation: wheelScroll 1s ease-in-out infinite;
+		}
+
+		@keyframes wheelScroll {
+			0%, 100% { 
+				transform: translateY(0); 
+				opacity: 1;
+			}
+			50% { 
+				transform: translateY(6px); 
+				opacity: 0.6;
+			}
+		}
+
+		/* Step 2: Selection Preview */
+		.selection-preview {
+			position: fixed;
+			border: 3px dashed #f59e0b;
+			background: rgba(245, 158, 11, 0.15);
+			border-radius: 4px;
+			pointer-events: none;
+			z-index: 10001;
+			display: none;
+		}
+
+		/* Drag Animation - moves horizontally within chart */
+		@keyframes dragRight {
+			0% { transform: translate(0, 0); }
+			50% { transform: translate(200px, 0); }
+			100% { transform: translate(0, 0); }
+		}
+
+		.mouse-cursor.dragging {
+			animation: dragRight 2.5s ease-in-out infinite;
+		}
+
+		/* Pulse animation for spotlight */
+		@keyframes pulseBorder {
+			0%, 100% { border-color: #3b82f6; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.23), 0 0 0 3px #3b82f6; }
+			50% { border-color: #60a5fa; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.23), 0 0 0 6px #60a5fa; }
+		}
+
+		.onboarding-spotlight.active {
+			animation: pulseBorder 2s ease-in-out infinite;
+		}
+		
+		/* Floating Help Button - Bottom Right */
+		.floating-help-btn {
+			position: fixed;
+			right: 24px;
+			bottom: 24px;
+			width: 56px;
+			height: 56px;
+			border-radius: 50%;
+			background: #3b82f6;
+			color: white;
+			border: none;
+			box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(0,0,0,0.2);
+			cursor: pointer;
+			z-index: 9999;  /* Below tutorial (10000+) but above everything else */
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.floating-help-btn svg {
+			width: 28px;
+			height: 28px;
+			pointer-events: none;
+		}
+
+		/* Hover effect */
+		.floating-help-btn:hover {
+			background: #2563eb;
+			transform: translateY(-4px) scale(1.1);
+			box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+		}
+
+		.floating-help-btn:active {
+			transform: translateY(-2px) scale(1.05);
+		}
+
+		/* Tooltip */
+		.help-tooltip {
+			position: absolute;
+			right: 65px;
+			top: 50%;
+			transform: translateY(-50%) scale(0.8);
+			background: #1e293b;
+			color: white;
+			padding: 6px 14px;
+			border-radius: 6px;
+			font-size: 14px;
+			font-weight: 600;
+			opacity: 0;
+			pointer-events: none;
+			transition: all 0.2s;
+			white-space: nowrap;
+		}
+
+		.help-tooltip::after {
+			content: '';
+			position: absolute;
+			right: -6px;
+			top: 50%;
+			transform: translateY(-50%);
+			border-width: 6px 0 6px 6px;
+			border-style: solid;
+			border-color: transparent transparent transparent #1e293b;
+		}
+
+		.floating-help-btn:hover .help-tooltip {
+			opacity: 1;
+			transform: translateY(-50%) scale(1);
+		}
+
+		/* Pulse animation to draw attention occasionally */
+		@keyframes pulseHelp {
+			0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+			50% { box-shadow: 0 4px 30px rgba(59, 130, 246, 0.7), 0 0 0 10px rgba(59, 130, 246, 0.1); }
+		}
+
+		.floating-help-btn.pulse {
+			animation: pulseHelp 2s infinite;
+		}
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 .text-xslate-800 font-sans">
@@ -2778,21 +3060,256 @@ function calculateCoreLossByIntegration(B_seq, H_seq, time_seq, volume_m3, switc
                 }
             });
         }
+		
+		
+		// ==========================================
+		// Onboarding System - Three Steps with Welcome
+		// ==========================================
+
+		const ONBOARDING_KEY = 'magnetic_tutorial_welcome_v1';
+
+		let tutorialState = {
+			step: 0,  // 0=Welcome, 1=Zoom, 2=Select
+			chartRect: null
+		};
+
+		function initOnboarding() {
+			if (localStorage.getItem(ONBOARDING_KEY) === 'done') return;
+			
+			setTimeout(() => {
+				startTutorial();
+			}, 800);
+		}
+
+		function getChartViewportRect() {
+			const chart = document.getElementById('flux-chart');
+			if (!chart) return null;
+			const parent = chart.parentElement;
+			return parent ? parent.getBoundingClientRect() : chart.getBoundingClientRect();
+		}
+
+		function startTutorial() {
+			const overlay = document.getElementById('onboarding-overlay');
+			const spotlight = document.getElementById('onboarding-spotlight');
+			const cursor = document.getElementById('mouse-cursor');
+			const stepWelcome = document.getElementById('step-welcome');
+			
+			tutorialState.step = 0;
+			
+			// Show overlay and welcome dialog only
+			overlay.classList.add('active');
+			stepWelcome.style.display = 'block';
+			
+			// Hide spotlight and cursor for welcome step (NO BOX)
+			spotlight.style.display = 'none';
+			cursor.style.display = 'none';
+			document.getElementById('wheel-indicator').style.display = 'none';
+			document.getElementById('selection-preview').style.display = 'none';
+		}
+
+		function nextOnboardingStep() {
+			const spotlight = document.getElementById('onboarding-spotlight');
+			const cursor = document.getElementById('mouse-cursor');
+			const wheel = document.getElementById('wheel-indicator');
+			const stepWelcome = document.getElementById('step-welcome');
+			const step1 = document.getElementById('step-1');
+			const step2 = document.getElementById('step-2');
+			
+			if (tutorialState.step === 0) {
+				// Welcome → Zoom
+				tutorialState.step = 1;
+				
+				stepWelcome.style.display = 'none';
+				step1.style.display = 'block';
+				
+				// NOW show spotlight and cursor (BOX APPEARS)
+				const rect = getChartViewportRect();
+				if (!rect) return;
+				tutorialState.chartRect = rect;
+				
+				spotlight.style.display = 'block';
+				spotlight.classList.add('active');
+				
+				// Position spotlight on chart
+				spotlight.style.left = (rect.left - 8) + 'px';
+				spotlight.style.top = (rect.top - 8) + 'px';
+				spotlight.style.width = (rect.width + 16) + 'px';
+				spotlight.style.height = (rect.height + 16) + 'px';
+				
+				// Position cursor in center
+				const centerX = rect.left + rect.width / 2 - 26;
+				const centerY = rect.top + rect.height / 2 - 26;
+				cursor.style.display = 'block';
+				cursor.style.left = centerX + 'px';
+				cursor.style.top = centerY + 'px';
+				wheel.style.display = 'flex';
+				
+				// Start tracking scroll/resize
+				window.addEventListener('scroll', updatePositions, { passive: true });
+				window.addEventListener('resize', updatePositions);
+				
+			} else if (tutorialState.step === 1) {
+				// Zoom → Select
+				tutorialState.step = 2;
+				
+				step1.style.display = 'none';
+				step2.style.display = 'block';
+				
+				const rect = getChartViewportRect();
+				const preview = document.getElementById('selection-preview');
+				
+				// Hide wheel, show drag animation
+				wheel.style.display = 'none';
+				preview.style.display = 'block';
+				cursor.classList.add('dragging');
+				
+				// Position for drag demo (top-left of chart)
+				const startX = rect.left + 40;
+				const startY = rect.top + 50;
+				cursor.style.left = startX + 'px';
+				cursor.style.top = startY + 'px';
+				
+				preview.style.left = startX + 'px';
+				preview.style.top = startY + 'px';
+				preview.style.width = '260px';
+				preview.style.height = '180px';
+			}
+		}
+
+		function updatePositions() {
+			if (tutorialState.step === 0) return; // Welcome step has no spotlight
+			
+			const rect = getChartViewportRect();
+			if (!rect) return;
+			
+			const spotlight = document.getElementById('onboarding-spotlight');
+			const cursor = document.getElementById('mouse-cursor');
+			const preview = document.getElementById('selection-preview');
+			
+			// Update spotlight position
+			spotlight.style.left = (rect.left - 8) + 'px';
+			spotlight.style.top = (rect.top - 8) + 'px';
+			spotlight.style.width = (rect.width + 16) + 'px';
+			spotlight.style.height = (rect.height + 16) + 'px';
+			
+			// Update cursor based on current step
+			if (tutorialState.step === 1) {
+				// Center for zoom
+				cursor.style.left = (rect.left + rect.width / 2 - 26) + 'px';
+				cursor.style.top = (rect.top + rect.height / 2 - 26) + 'px';
+			} else if (tutorialState.step === 2) {
+				// Drag position for select
+				const startX = rect.left + 40;
+				const startY = rect.top + 50;
+				cursor.style.left = startX + 'px';
+				cursor.style.top = startY + 'px';
+				preview.style.left = startX + 'px';
+				preview.style.top = startY + 'px';
+			}
+		}
+
+		function closeOnboarding() {
+			const overlay = document.getElementById('onboarding-overlay');
+			const cursor = document.getElementById('mouse-cursor');
+			
+			overlay.classList.remove('active');
+			cursor.classList.remove('dragging');
+			
+			localStorage.setItem(ONBOARDING_KEY, 'done');
+			
+			window.removeEventListener('scroll', updatePositions);
+			window.removeEventListener('resize', updatePositions);
+			
+			setTimeout(() => {
+				overlay.style.display = 'none';
+			}, 300);
+		}
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             initSliders();
             initTopology();
             initPresets();
-            // 初始化核心步骤：遍历所有材料，根据初始R自动计算r、d、N
+
             materials.forEach(mat => {
-                if (mat.R > 0) { // 仅对有初始R有效值的材料计算
+                if (mat.R > 0) {
                     autoCalcMatParams(mat);
                 }
             });
             initMaterials();
             updateCharts();
+			
+			initOnboarding();
+			
+			const helpBtn = document.getElementById('help-btn');
+    
+			if (!helpBtn) {
+				console.error('Help button not found!');
+				return;
+			}
+			
+			helpBtn.onclick = function(e) {
+				e.stopPropagation();
+				
+				// 1. 清除记录（确保 key 和之前存储的一致）
+				localStorage.removeItem('magnetic_tutorial_welcome_v1');
+				location.reload()
+			};
         });
     </script>
+	
+	<!-- Onboarding Tutorial - Left Side Fixed -->
+	<div id="onboarding-overlay" class="onboarding-overlay">
+		<div class="onboarding-backdrop"></div>
+		
+		<!-- Spotlight highlights Flux Chart -->
+		<div id="onboarding-spotlight" class="onboarding-spotlight"></div>
+		
+		<!-- Selection rectangle (Step 2 only) -->
+		<div id="selection-preview" class="selection-preview"></div>
+		
+		<!-- Mouse Cursor with built-in wheel -->
+		<div id="mouse-cursor" class="mouse-cursor">
+			<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+				<path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.44 0 .66-.53.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" 
+					  fill="white" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			<!-- Wheel indicator inside cursor for Step 1 -->
+			<div id="wheel-indicator" class="wheel-indicator" style="display: none;">
+				<div class="wheel-dot"></div>
+			</div>
+		</div>
+		
+		<!-- Step 0: Welcome (No Spotlight) -->
+		<div id="step-welcome" class="onboarding-step-box" style="display: none;">
+			<h3>👋 Welcome to AI Magnetic Design</h3>
+			<p>This App is used to design magnetic components in DC-AC converters.</p>
+			<button onclick="nextOnboardingStep()">Get Started →</button>
+		</div>
+
+		<!-- Step 1: Zoom (Fixed Left) -->
+		<div id="step-1" class="onboarding-step-box" style="display: none;">
+			<h3>🔍 Zoom to Explore</h3>
+			<p>Hover over the chart area and <strong>scroll your mouse wheel</strong> to zoom in and out of the time axis.</p>
+			<button onclick="nextOnboardingStep()">Next →</button>
+		</div>
+
+		<!-- Step 2: Select (Fixed Left) -->
+		<div id="step-2" class="onboarding-step-box" style="display: none;">
+			<h3>✋ Select Region</h3>
+			<p>Now <strong>click and drag</strong> on the chart to draw a selection rectangle. This selects the time region for AI-powered H prediction and core loss analysis.</p>
+			<button onclick="closeOnboarding()">Start Designing</button>
+		</div>
+		
+		<button class="onboarding-close" onclick="closeOnboarding()">Skip Tutorial ✕</button>
+	</div>
+	
+	<button id="help-btn" class="floating-help-btn" title="View Guide">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+			<path d="M4 4v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+		</svg>
+		<span class="help-tooltip">Guide</span>
+	</button>
 </body>
 </html>

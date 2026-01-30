@@ -213,7 +213,7 @@
                 <div class="p-4 grid grid-cols-2 gap-4 flex-1">
                     <!-- Core Loss Comparison (Total W only) -->
                     <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col">
-                        <h3 class="text-sm font-bold text-slate-700 mb-2 text-center">Core Loss Comparison (W)</h3>
+                        <h3 class="text-sm font-bold text-slate-700 mb-2 text-center">Core Loss Comparison (W/m³)</h3>
                         <div class="flex-1 min-h-[200px]" id="loss-chart">
                             <div class="empty-state">Upload B.csv and select materials</div>
                         </div>
@@ -461,6 +461,31 @@
         function hideLoadingOverlay() {
             document.getElementById('loading-overlay').classList.remove('show');
         }
+		
+		function calculateCoreLoss(B_array, H_array, samplingFreq = 16e6) {
+			if (B_array.length !== H_array.length || B_array.length < 2) {
+				throw new Error("B and H arrays must have the same length and at least 2 elements.");
+			}
+
+			const dt = 1 / samplingFreq;
+			let totalEnergy = 0; // Energy per unit volume (J/m³)
+
+			// Numerical integration: Calculate ∮ H dB (Trapezoidal rule)
+			// Note: This requires complete hysteresis loop data
+			for (let i = 0; i < B_array.length - 1; i++) {
+				const dB = B_array[i+1] - B_array[i];
+				const avgH = (H_array[i] + H_array[i+1]) / 2;
+				totalEnergy += avgH * dB; // Units: (A/m) * T = (A/m) * (Wb/m²) = J/m³
+			}
+
+			// Calculate the total time duration
+			const totalTime = (B_array.length - 1) * dt; // Time duration (seconds)
+
+			// Now divide the total energy by the total time to get the average power density
+			const avgPowerDensity = totalEnergy / totalTime; // W/m³
+
+			return { totalLoss: avgPowerDensity }; // W/m³
+		}
 
         async function requestPredictions() {
             if (!isFileLoaded || !bDataFromFile || bDataFromFile.length === 0) {
@@ -492,12 +517,13 @@
                             throw new Error(`Prediction failed for ${material.name}: ${response.status}`);
                         }
                         
-                        const result = await response.json();
+                        const result = await response.json()
+						coreloss = calculateCoreLoss(bDataFromFile, result.H_pred).totalLoss;
                         
                         // Store prediction results (core_loss is in Watts)
                         predictionResults[material.id] = {
                             H_pred: result.H_pred || [],
-                            core_loss: result.core_loss || 0
+                            core_loss: coreloss || 0
                         };
                         
                     } catch (error) {
@@ -623,7 +649,7 @@
                             callbacks: {
                                 label: (context) => {
                                     const loss = context.parsed.x;
-                                    return `Total Loss: ${loss.toFixed(4)} W`;
+                                    return `Total Loss: ${loss.toFixed(4)} W/m³`;
                                 }
                             }
                         }
@@ -632,7 +658,7 @@
                         x: {
                             title: { 
                                 display: true, 
-                                text: 'Power Loss (W)', 
+                                text: 'Power Loss (W/m³)', 
                                 font: { size: 11, weight: 'bold' },
                                 color: '#475569'
                             },

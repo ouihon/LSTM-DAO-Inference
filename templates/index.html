@@ -91,7 +91,7 @@
                     <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <span class="menu-text font-semibold whitespace-nowrap">Model Libraries</span>
                 </a>
-				<a data-page="test" class="menu-item active flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600">
+				<a data-page="test" class="menu-item flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-200">
 					<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zM4 12c0 1.1.9 2 2 2s2-.9 2-2-1.1-2-2-2-2 .9-2 2zM4 4c0 1.1.9 2 2 2s2-.9 2-2-1.1-2-2-2-2 .9-2 2zm8 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM12 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM20 12c0 1.1-.9 2-2 2s-2-.9-2-2 1.1-2 2-2 2 .9 2 2zM20 4c0 1.1-.9 2-2 2s-2-.9-2-2 1.1-2 2-2 2 .9 2 2z"></path>
 					</svg>
@@ -102,6 +102,43 @@
                     <span class="menu-text font-semibold whitespace-nowrap">Documents</span>
                 </a>
             </nav>
+			
+			<!-- Team Info (sticky at bottom) -->
+			<div id="team-info"
+				 class="mt-auto sticky bottom-0 bg-gray-100 p-4 border-t border-gray-200">
+			  <div class="team-text text-[11px] text-gray-600 leading-relaxed">
+				<div class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+				  <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+					  d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H2v-2a4 4 0 013-3.87m10-6a4 4 0 10-8 0 4 4 0 008 0zm6 4a3 3 0 10-6 0 3 3 0 006 0z"/>
+				  </svg>
+				  HFUT-CityUHK-XMU Team
+				</div>
+
+				<div class="space-y-1.5">
+				  <div>
+					Liping Mo
+					<a class="text-blue-600/80 hover:text-blue-700 hover:underline break-all" href="mailto:lipingmo@hfut.edu.cn">lipingmo@hfut.edu.cn</a>
+				  </div>
+				  <div>
+					Yibo Wang
+					<a class="text-blue-600/80 hover:text-blue-700 hover:underline break-all" href="mailto:yibo.wang@my.cityu.edu.hk">yibo.wang@my.cityu.edu.hk</a>
+				  </div>
+				  <div>
+					Yue Liu
+					<a class="text-blue-600/80 hover:text-blue-700 hover:underline break-all" href="mailto:yueliu@cityu.edu.hk">yueliu@cityu.edu.hk</a>
+				  </div>
+				  <div>
+					Weipeng Wang
+					<a class="text-blue-600/80 hover:text-blue-700 hover:underline break-all" href="mailto:vpengwang@gmail.com">vpengwang@gmail.com</a>
+				  </div>
+				  <div>
+					Sheng Ren
+					<a class="text-blue-600/80 hover:text-blue-700 hover:underline break-all" href="mailto:shengren3-c@my.cityu.edu.hk">shengren3-c@my.cityu.edu.hk</a>
+				  </div>
+				</div>
+			  </div>
+			</div>
         </aside>
 
         <div class="flex-1 relative" id="main-content">
@@ -126,6 +163,9 @@
         const menuTexts = document.querySelectorAll('.menu-text');
         const contentFrame = document.getElementById('content-frame');
         const loader = document.getElementById('loader-overlay');
+		const teamInfo = document.getElementById('team-info');
+        const teamTexts = document.querySelectorAll('.team-text');
+
         
         let isCollapsed = false;
 
@@ -271,6 +311,7 @@
                     toggleBtn.style.left = '50%';
                     toggleBtn.style.right = 'auto';
                     toggleBtn.style.transform = 'translate(-50%, -50%)';
+					if (teamInfo) teamInfo.style.display = 'none';
                 } else {
                     sidebar.style.width = '300px';
                     menuItems.forEach(item => {
@@ -285,6 +326,7 @@
                     toggleBtn.style.left = 'auto';
                     toggleBtn.style.right = '1rem';
                     toggleBtn.style.transform = 'translate(0, -50%)';
+					if (teamInfo) teamInfo.style.display = 'block';
                 }
 
                 // 动画结束后恢复 iframe（延迟到动画完全结束）
